@@ -155,21 +155,14 @@ export default function IndoorNavigationPage() {
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                const locationsWithCoords = locations.filter(loc => loc.x_coordinate && loc.y_coordinate);
-
-                if (locationsWithCoords.length === 0) {
-                    setStartLocation(locations[0]);}
-                    else{
-                        setStartLocation(locations[0]);
-                    }
-                // In a real implementation, we would use WiFi/BLE signals to determine location
-        // For now, set to first location - in future integrate with WiFi positioning
-        setStartLocation(locations[0]);
-        setSearchQuery('');
-        setShowSearchResults(false);
-        console.log('GPS coords:', latitude, longitude);
-                },
+                const { latitude, longitude, accuracy } = position.coords;
+                // Store raw GPS coords for possible mapping to building coordinates later
+                setUserPosition({ x: latitude, y: longitude, accuracy: accuracy ?? 0 });
+                setSearchQuery('');
+                setShowSearchResults(false);
+                console.log('GPS coords:', latitude, longitude, 'accuracy:', accuracy);
+                // TODO: map GPS coords to nearest indoor location (WiFi/BLE integration)
+            },
             (error) => {
                 console.warn('GPS failed, using first location:', error.message);
                 setStartLocation(locations[0]);
@@ -177,7 +170,7 @@ export default function IndoorNavigationPage() {
                 setShowSearchResults(false);
                 setRouteError(null);
             },
-            {timeout: 5000, maximumAge: 60000 }
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
         );
     };
 
