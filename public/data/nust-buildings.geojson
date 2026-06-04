@@ -3,7 +3,7 @@
   "features": [
     {
       "type": "Feature",
-      "properties": { "id": "lib-001", "name": "Prof Tjama Tjivikua Library", "type": "building" },
+      "properties": { "id": "lib-001", "name": "D1.Prof Tjama Tjivikua Library", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075346359786835, -22.564414570284825]
@@ -11,7 +11,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "eng-001", "name": "Engineering Building", "type": "building" },
+      "properties": { "id": "eng-001", "name": " D2:Engineering Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.074554165337275, -22.564940049542116]
@@ -19,15 +19,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "has-001", "name": "Health and Applied", "type": "building" },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [17.073325762141593, -22.565779664363262]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "id": "aud-001", "name": "Auditorium", "type": "building" },
+      "properties": { "id": "aud-001", "name": "D3:Auditorium", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075029085438217, -22.565100706082774]
@@ -35,10 +27,26 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "stb-001", "name": "Science and Technology Building", "type": "building" },
+      "properties": { "id": "stb-001", "name": "D4:Science and Technology Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07441025215516, -22.565762690446334]
+      }
+    },
+     {
+      "type": "Feature",
+      "properties": { "id": "has-001", "name": "E2: Mining and Engineering Building", "type": "building" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [17.073325762141593, -22.565779664363262]
+      }
+    },
+        {
+      "type": "Feature",
+      "properties": { "id": "mec-001", "name": "E3: Civil Engineering Building", "type": "building" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [17.073236087698465, -22.56589954085443]
       }
     },
     {
@@ -432,14 +440,7 @@
         "type": "Point",
         "coordinates": [17.075669828318325, -22.56541061529593]
       }
-    },
-    {
-      "type": "Feature",
-      "properties": { "id": "mec-001", "name": "Mechanical", "type": "building" },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [17.07316316686837, -22.565823178563335]
-      }
     }
+
   ]
 }

@@ -338,6 +338,78 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                         .catch(() => {});
                 } catch {}
 
+                // Load and display NUST buildings/POIs from local GeoJSON
+                try {
+                    fetch('/data/nust-buildings.geojson')
+                        .then(r => r.ok ? r.json() : Promise.reject(new Error('buildings 404')))
+                        .then((buildings) => {
+                            try {
+                                if (!map.current!.getSource('nust-buildings-markers')) {
+                                    map.current!.addSource('nust-buildings-markers', { type: 'geojson', data: buildings } as any);
+                                } else {
+                                    (map.current!.getSource('nust-buildings-markers') as any).setData(buildings);
+                                }
+                                if (!map.current!.getLayer('nust-buildings-circles')) {
+                                    map.current!.addLayer({
+                                        id: 'nust-buildings-circles',
+                                        type: 'circle',
+                                        source: 'nust-buildings-markers',
+                                        paint: {
+                                            'circle-radius': ['case',
+                                                ['==', ['get', 'type'], 'gate'], 9,
+                                                ['==', ['get', 'type'], 'amenity'], 6,
+                                                7
+                                            ],
+                                            'circle-color': ['case',
+                                                ['==', ['get', 'type'], 'gate'], '#EF4444',
+                                                ['==', ['get', 'type'], 'amenity'], '#F59E0B',
+                                                '#2563EB'
+                                            ],
+                                            'circle-stroke-color': '#ffffff',
+                                            'circle-stroke-width': 2,
+                                            'circle-opacity': 0.9
+                                        }
+                                    } as any);
+                                }
+                                if (!map.current!.getLayer('nust-buildings-text')) {
+                                    map.current!.addLayer({
+                                        id: 'nust-buildings-text',
+                                        type: 'symbol',
+                                        source: 'nust-buildings-markers',
+                                        layout: {
+                                            'text-field': ['get', 'name'],
+                                            'text-size': 11,
+                                            'text-offset': [0, 1.2],
+                                            'text-anchor': 'top',
+                                            'text-optional': true,
+                                            'text-allow-overlap': false
+                                        },
+                                        paint: {
+                                            'text-color': '#111827',
+                                            'text-halo-color': '#ffffff',
+                                            'text-halo-width': 1.5
+                                        }
+                                    } as any);
+                                }
+                                map.current!.on('click', 'nust-buildings-circles', (e) => {
+                                    if (!e.features?.[0]) return;
+                                    const props = e.features[0].properties;
+                                    new maplibregl.Popup()
+                                        .setLngLat(e.lngLat)
+                                        .setHTML(`<div style="padding:8px"><strong>${props?.name || 'Building'}</strong></div>`)
+                                        .addTo(map.current!);
+                                });
+                                map.current!.on('mouseenter', 'nust-buildings-circles', () => {
+                                    if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+                                });
+                                map.current!.on('mouseleave', 'nust-buildings-circles', () => {
+                                    if (map.current) map.current.getCanvas().style.cursor = '';
+                                });
+                            } catch (e) { console.warn('buildings layer add failed', e); }
+                        })
+                        .catch(() => {});
+                } catch {}
+
                 // Add keyboard controls
                 const handleKeyPress = (e: KeyboardEvent) => {
                     if (!map.current || !e.shiftKey) return;
