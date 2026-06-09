@@ -1021,14 +1021,12 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             is.onblur = () => { is.style.borderColor = '#e5e7eb'; is.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)'; };
                             startDiv.appendChild(is);
                             const startDropdown = document.createElement('ul');
-                            startDropdown.style.position = 'absolute';
-                            startDropdown.style.left = '0';
-                            startDropdown.style.right = '0';
-                            startDropdown.style.top = '40px';
+                            startDropdown.style.position = 'fixed';
                             startDropdown.style.background = '#fff';
+                            startDropdown.style.color = '#111827';
                             startDropdown.style.border = '1px solid #e5e7eb';
                             startDropdown.style.borderRadius = '8px';
-                            startDropdown.style.zIndex = '2000';
+                            startDropdown.style.zIndex = '9999';
                             startDropdown.style.listStyle = 'none';
                             startDropdown.style.padding = '0';
                             startDropdown.style.margin = '0';
@@ -1036,7 +1034,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             startDropdown.style.overflowY = 'auto';
                             startDropdown.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
                             startDropdown.style.display = 'none';
-                            startDiv.appendChild(startDropdown);
+                            document.body.appendChild(startDropdown);
                             is.addEventListener('input', function (ev) {
                                 const val = is.value.trim().toLowerCase();
                                 startDropdown.innerHTML = '';
@@ -1070,12 +1068,19 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                     startDropdown.appendChild(li);
                                 });
                                 console.log('Start dropdown showing with', matches.length, 'options');
+                                const sr = is.getBoundingClientRect();
+                                startDropdown.style.top = (sr.bottom + 2) + 'px';
+                                startDropdown.style.left = sr.left + 'px';
+                                startDropdown.style.width = sr.width + 'px';
                                 startDropdown.style.display = 'block';
                             });
                             is.addEventListener('focus', () => {
                                 console.log('Start input focused');
-                                // Show dropdown again if input has value
                                 if (is.value.trim().length > 0) {
+                                    const sr = is.getBoundingClientRect();
+                                    startDropdown.style.top = (sr.bottom + 2) + 'px';
+                                    startDropdown.style.left = sr.left + 'px';
+                                    startDropdown.style.width = sr.width + 'px';
                                     startDropdown.style.display = 'block';
                                 }
                             });
@@ -1106,14 +1111,12 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             ie.onblur = () => { ie.style.borderColor = '#e5e7eb'; ie.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)'; };
                             endDiv.appendChild(ie);
                             const endDropdown = document.createElement('ul');
-                            endDropdown.style.position = 'absolute';
-                            endDropdown.style.left = '0';
-                            endDropdown.style.right = '0';
-                            endDropdown.style.top = '40px';
+                            endDropdown.style.position = 'fixed';
                             endDropdown.style.background = '#fff';
+                            endDropdown.style.color = '#111827';
                             endDropdown.style.border = '1px solid #e5e7eb';
                             endDropdown.style.borderRadius = '8px';
-                            endDropdown.style.zIndex = '2000';
+                            endDropdown.style.zIndex = '9999';
                             endDropdown.style.listStyle = 'none';
                             endDropdown.style.padding = '0';
                             endDropdown.style.margin = '0';
@@ -1121,7 +1124,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             endDropdown.style.overflowY = 'auto';
                             endDropdown.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
                             endDropdown.style.display = 'none';
-                            endDiv.appendChild(endDropdown);
+                            document.body.appendChild(endDropdown);
                             ie.addEventListener('input', function (ev) {
                                 const val = ie.value.trim().toLowerCase();
                                 endDropdown.innerHTML = '';
@@ -1155,12 +1158,19 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                     endDropdown.appendChild(li);
                                 });
                                 console.log('End dropdown showing with', matches.length, 'options');
+                                const er = ie.getBoundingClientRect();
+                                endDropdown.style.top = (er.bottom + 2) + 'px';
+                                endDropdown.style.left = er.left + 'px';
+                                endDropdown.style.width = er.width + 'px';
                                 endDropdown.style.display = 'block';
                             });
                             ie.addEventListener('focus', () => {
                                 console.log('End input focused');
-                                // Show dropdown again if input has value
                                 if (ie.value.trim().length > 0) {
+                                    const er = ie.getBoundingClientRect();
+                                    endDropdown.style.top = (er.bottom + 2) + 'px';
+                                    endDropdown.style.left = er.left + 'px';
+                                    endDropdown.style.width = er.width + 'px';
                                     endDropdown.style.display = 'block';
                                 }
                             });
@@ -1282,7 +1292,87 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                 w.style.minWidth = '260px';
                                 w.appendChild(el); w.appendChild(btn); return w;
                             };
-                            c.appendChild(wrap(is, gs));
+                            // Staff search bar (UI only)
+                            const staffRow = document.createElement('div');
+                            staffRow.style.display = 'flex';
+                            staffRow.style.alignItems = 'center';
+                            staffRow.style.gap = '8px';
+                            staffRow.style.background = '#FFFFFF';
+                            staffRow.style.border = '1px solid #e5e7eb';
+                            staffRow.style.borderRadius = '9999px';
+                            staffRow.style.padding = '4px 12px';
+                            staffRow.style.flex = '1 0 100%';
+                            staffRow.style.minWidth = '260px';
+
+                            const staffIcon = document.createElement('span');
+                            staffIcon.textContent = '🔍';
+                            staffIcon.style.fontSize = '13px';
+                            staffIcon.style.flexShrink = '0';
+
+                            const staffInput = document.createElement('input');
+                            staffInput.type = 'text';
+                            staffInput.placeholder = 'Search for a staff member…';
+                            staffInput.style.flex = '1';
+                            staffInput.style.border = 'none';
+                            staffInput.style.outline = 'none';
+                            staffInput.style.fontSize = '12px';
+                            staffInput.style.background = 'transparent';
+                            staffInput.style.color = '#111827';
+
+                            const staffLabel = document.createElement('span');
+                            staffLabel.textContent = 'Staff';
+                            staffLabel.style.fontSize = '10px';
+                            staffLabel.style.fontWeight = '600';
+                            staffLabel.style.color = '#6B7280';
+                            staffLabel.style.textTransform = 'uppercase';
+                            staffLabel.style.letterSpacing = '0.05em';
+                            staffLabel.style.flexShrink = '0';
+
+                            staffRow.appendChild(staffLabel);
+                            staffRow.appendChild(staffIcon);
+                            staffRow.appendChild(staffInput);
+                            c.appendChild(staffRow);
+
+                            // GPS button: set start to current device location
+                            const gpsBtn = mk('📍 My Location');
+                            gpsBtn.title = 'Use my current GPS location as the start point';
+                            gpsBtn.style.background = '#EFF6FF';
+                            gpsBtn.style.borderColor = '#BFDBFE';
+                            gpsBtn.style.color = '#1D4ED8';
+                            gpsBtn.style.minWidth = '110px';
+                            gpsBtn.onmouseenter = () => { gpsBtn.style.background = '#DBEAFE'; };
+                            gpsBtn.onmouseleave = () => { gpsBtn.style.background = '#EFF6FF'; };
+                            gpsBtn.onclick = () => {
+                                if (!navigator.geolocation) {
+                                    alert('Geolocation is not supported by your browser.');
+                                    return;
+                                }
+                                const orig = gpsBtn.textContent;
+                                gpsBtn.textContent = 'Locating…';
+                                (gpsBtn as any).style.pointerEvents = 'none';
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => {
+                                        gpsBtn.textContent = orig;
+                                        (gpsBtn as any).style.pointerEvents = '';
+                                        const lng = pos.coords.longitude;
+                                        const lat = pos.coords.latitude;
+                                        is.value = 'My Location';
+                                        setPoint('start', lng, lat);
+                                        tryComputeRoute();
+                                    },
+                                    (err) => {
+                                        gpsBtn.textContent = orig;
+                                        (gpsBtn as any).style.pointerEvents = '';
+                                        console.warn('Geolocation error:', err.message);
+                                        alert('Could not get your location: ' + err.message);
+                                    },
+                                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                                );
+                            };
+
+                            const startWrap = wrap(is, gs);
+                            startWrap.appendChild(gpsBtn);
+                            c.appendChild(startWrap);
                             c.appendChild(wrap(ie, ge));
                             const actions = document.createElement('div');
                             actions.style.display = 'flex';
@@ -1294,7 +1384,12 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             c.appendChild(actions);
                             this._c = c; return c;
                         }
-                        onRemove() { if (this._c?.parentNode) this._c.parentNode.removeChild(this._c); this._c = null; }
+                        onRemove() {
+                            if (this._c?.parentNode) this._c.parentNode.removeChild(this._c);
+                            this._c = null;
+                            if (startDropdown.parentNode) startDropdown.parentNode.removeChild(startDropdown);
+                            if (endDropdown.parentNode) endDropdown.parentNode.removeChild(endDropdown);
+                        }
                     }
                     map.current!.addControl(new (WalkControl as any)(), 'top-left');
 

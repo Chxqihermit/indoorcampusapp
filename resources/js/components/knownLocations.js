@@ -1,7 +1,4 @@
 export const knownLocations = [
-  { type: 'building', name: 'Admin Block', coordinates: [27.4965, -17.5856] },
-  { type: 'gate', name: 'Main Gate', coordinates: [27.4950, -17.5840] },
-  { type: 'door', name: 'Library Entrance', coordinates: [27.4972, -17.5861] },
   { type: 'building', name: 'Prof Tjama Tjivikua Library', coordinates: [17.075346359786835, -22.564414570284825] },
   { type: 'building', name: 'Engineering Building', coordinates: [17.074554165337275, -22.564940049542116] },
   { type: 'building', name: 'Health and Applied', coordinates: [17.073325762141593, -22.565779664363262] },
@@ -59,5 +56,5 @@ export const knownLocations = [
   { type: 'building', name: 'Centre for Entrepreneural Development B', coordinates: [17.07712566652063, -22.564867286368568] },
   { type: 'building', name: 'P', coordinates: [17.07585931496186, -22.565548203346125] },
   { type: 'building', name: 'GIZ Bush Control and Biomass Utilisation Project', coordinates: [17.075669828318325, -22.56541061529593] },
-  { type: 'building', name: 'Mechanical', coordinates: [17.07316316686837, -22.565823178563335] },
+  { type: 'building', name: 'E3: Civil Engineering Building', coordinates: [17.073236087698465, -22.56589954085443] },
 ];
