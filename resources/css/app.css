@@ -141,3 +141,246 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Map Layout - Google Maps Style */
+@layer components {
+    .map-header {
+        @apply fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm dark:bg-slate-950 dark:border-slate-800;
+    }
+
+    .map-container {
+        @apply flex-1 relative overflow-hidden bg-gray-200 dark:bg-slate-800;
+    }
+
+    .map-sidebar {
+        @apply fixed left-0 top-0 h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-transform duration-300 z-40 w-64;
+    }
+
+    .map-sidebar.hidden {
+        @apply -translate-x-full;
+    }
+
+    .map-sidebar-overlay {
+        @apply fixed inset-0 bg-black/20 z-30;
+    }
+
+    /* MapLibre Control Adjustments */
+    .maplibregl-ctrl-top-left {
+        @apply top-4;
+    }
+
+    .maplibregl-ctrl-top-right {
+        @apply top-4 right-4;
+    }
+
+    /* Google Maps-style campus search — always light, fixed below header */
+    .campus-search-container {
+        position: fixed;
+        top: calc(4rem + 0.75rem);
+        left: 0.75rem;
+        z-index: 45;
+        width: min(calc(100vw - 1.5rem), 28rem);
+        pointer-events: none;
+        color-scheme: light;
+        transition: left 300ms ease;
+    }
+
+    @media (min-width: 640px) {
+        .campus-search-container--sidebar-open {
+            left: calc(16rem + 0.75rem);
+            width: min(calc(100vw - 16rem - 1.5rem), 28rem);
+        }
+    }
+
+    .campus-search-container > * {
+        pointer-events: auto;
+    }
+
+    .campus-search-bar {
+        @apply flex items-center gap-2 bg-white rounded-full shadow-md border border-gray-200/80 px-3 py-2;
+    }
+
+    .campus-search-input {
+        @apply flex-1 min-w-0 bg-transparent text-sm text-gray-900 placeholder-gray-500 outline-none;
+    }
+
+    .campus-directions-btn {
+        @apply flex items-center justify-center w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition shrink-0;
+    }
+
+    .campus-directions-panel {
+        @apply bg-white rounded-2xl shadow-md border border-gray-200/80 overflow-hidden;
+    }
+
+    .campus-directions-input {
+        @apply w-full px-3 py-2 text-sm bg-gray-50 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900;
+    }
+
+    .campus-search-dropdown {
+        @apply mt-1 bg-white rounded-2xl shadow-md border border-gray-200/80 overflow-hidden max-h-80 overflow-y-auto;
+    }
+
+    .campus-search-result {
+        @apply flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-50 transition text-left;
+    }
+
+    .campus-search-result-active {
+        @apply bg-blue-50;
+    }
+
+    .campus-category-pills {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .campus-category-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    .campus-category-pill {
+        @apply flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white rounded-full shadow-sm border border-gray-200/80 text-gray-700 hover:bg-gray-50 transition shrink-0 whitespace-nowrap;
+    }
+
+    /* Map coordinate debug overlay */
+    .map-coord-debug {
+        position: absolute;
+        bottom: 1.5rem;
+        right: 3.5rem;
+        z-index: 45;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+        pointer-events: none;
+    }
+
+    .map-coord-debug-toggle {
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+        background: white;
+        border: 1px solid rgb(229 231 235 / 0.8);
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgb(0 0 0 / 0.08);
+        cursor: pointer;
+        transition: background 150ms, color 150ms, border-color 150ms;
+        color-scheme: light;
+    }
+
+    .map-coord-debug-toggle:hover {
+        background: #f9fafb;
+    }
+
+    .map-coord-debug-toggle--on {
+        color: #1d4ed8;
+        border-color: #93c5fd;
+        background: #eff6ff;
+    }
+
+    .map-coord-debug-panel {
+        pointer-events: auto;
+        min-width: 14rem;
+        padding: 0.625rem 0.75rem;
+        background: rgb(17 24 39 / 0.92);
+        border-radius: 0.5rem;
+        font-size: 0.6875rem;
+        color: #e5e7eb;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+    }
+
+    .map-coord-debug-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        line-height: 1.5;
+    }
+
+    .map-coord-debug-row--full {
+        flex-direction: column;
+        gap: 0.125rem;
+        margin-top: 0.375rem;
+        padding-top: 0.375rem;
+        border-top: 1px solid rgb(75 85 99 / 0.5);
+    }
+
+    .map-coord-debug-label {
+        color: #9ca3af;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .map-coord-debug-geojson {
+        color: #93c5fd;
+        word-break: break-all;
+    }
+
+    .map-coord-debug-hint {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    .maplibregl-ctrl {
+        @apply shadow-lg;
+    }
+
+    .maplibregl-ctrl button {
+        @apply transition-colors;
+    }
+
+    .maplibregl-ctrl button:hover {
+        @apply bg-gray-100;
+    }
+
+    /* Map popups always use dark text on white (ignore dark mode inheritance) */
+    .maplibregl-popup-content {
+        @apply bg-white text-gray-900;
+        color-scheme: light;
+    }
+
+    .maplibregl-popup-content,
+    .maplibregl-popup-content strong,
+    .maplibregl-popup-content div,
+    .maplibregl-popup-content span {
+        color: #111827;
+    }
+
+    /* Menu Button */
+    .map-menu-btn {
+        @apply flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition;
+    }
+
+    /* Search Input Styles */
+    .map-search-input {
+        @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-600 dark:text-white;
+    }
+
+    /* GPS Button */
+    .map-gps-btn {
+        @apply flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50;
+    }
+
+    /* Set Buttons */
+    .map-set-btn {
+        @apply px-3 py-2 text-sm font-medium text-white rounded-lg transition;
+    }
+
+    .map-set-btn-start {
+        @apply bg-green-600 hover:bg-green-700;
+    }
+
+    .map-set-btn-end {
+        @apply bg-blue-600 hover:bg-blue-700;
+    }
+}

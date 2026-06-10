@@ -1,15 +1,19 @@
 // resources/js/Components/MapComponent.jsx
-import React, { useRef, useEffect, JSX, useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useEffect, JSX, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { knownLocations } from './knownLocations';
+import MapCoordinateDebug, { type HoverCoordinates } from './MapCoordinateDebug';
 import maplibregl, { Map, NavigationControl, GeolocateControl, FullscreenControl, Popup } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css'; // Import Maplibre CSS for map components
 
+const COORD_DEBUG_KEY = 'campusnav-coord-debug';
+
 // Define campus locations (centered on the actual NUST Windhoek West blocks)
 export const CAMPUS_LOCATIONS = {
-    // Upper campus quad (between Austin Rd & Brahms Ave)
-    main: [17.08265, -22.56085] as [number, number],
-    // Lower campus engineering cluster (Pasteur St side)
-    lower: [17.0786, -22.56485] as [number, number],
+    // Upper campus (Brahms Ave / Austin Rd side)
+    main: [17.0775, -22.56575] as [number, number],
+    upper: [17.0775, -22.56575] as [number, number],
+    // Lower campus (Pasteur St / engineering cluster)
+    lower: [17.0738, -22.56585] as [number, number],
 };
 
 export interface MapComponentRef {
@@ -17,9 +21,30 @@ export interface MapComponentRef {
     clearRoute: () => void;
     goToMainCampus: () => void;
     goToLowerCampus: () => void;
+    setStart: (lng: number, lat: number, label?: string) => void;
+    setEnd: (lng: number, lat: number, label?: string) => void;
+    flyTo: (lng: number, lat: number, zoom?: number) => void;
+    geocodeAndSet: (which: 'start' | 'end', text: string) => Promise<void>;
+    useGpsLocation: () => void;
+    startMapPick: (which: 'start' | 'end') => void;
+    swapPoints: () => void;
 }
 
-const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
+interface WalkApi {
+    setPoint: (which: 'start' | 'end', lng: number, lat: number, label?: string) => void;
+    clearWalk: () => void;
+    tryComputeRoute: () => Promise<void>;
+    geocodeAndSet: (which: 'start' | 'end', text: string) => Promise<void>;
+    setSelecting: (mode: 'start' | 'end' | null) => void;
+    swapPoints: () => void;
+    getLabels: () => { start: string; end: string };
+}
+
+interface MapComponentProps {
+    onRouteStateChange?: (state: { start: string; end: string }) => void;
+}
+
+const MapComponent = forwardRef<MapComponentRef, MapComponentProps>(({ onRouteStateChange }, ref) => {
     const mapContainer = useRef<HTMLDivElement | null>(null);
     const map = useRef<Map | null>(null);
     const keyHandlerRef = useRef<((e: KeyboardEvent) => void) | null>(null);
@@ -28,7 +53,28 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
     const walkSelectingRef = useRef<'start' | 'end' | null>(null);
     const walkStartRef = useRef<[number, number] | null>(null);
     const walkEndRef = useRef<[number, number] | null>(null);
+    const gpsBtnRef = useRef<HTMLElement | null>(null);
+    const walkApiRef = useRef<WalkApi | null>(null);
+    const coordDebugEnabledRef = useRef(false);
     const [routeActive, setRouteActive] = useState(false);
+    const [coordDebugEnabled, setCoordDebugEnabled] = useState(
+        () => localStorage.getItem(COORD_DEBUG_KEY) === 'true',
+    );
+    const [hoverCoords, setHoverCoords] = useState<HoverCoordinates | null>(null);
+
+    const toggleCoordDebug = useCallback(() => {
+        setCoordDebugEnabled((prev) => {
+            const next = !prev;
+            localStorage.setItem(COORD_DEBUG_KEY, String(next));
+            coordDebugEnabledRef.current = next;
+            if (!next) setHoverCoords(null);
+            return next;
+        });
+    }, []);
+
+    useEffect(() => {
+        coordDebugEnabledRef.current = coordDebugEnabled;
+    }, [coordDebugEnabled]);
 
     useEffect(() => {
         if (map.current) return;
@@ -139,6 +185,15 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                 console.error('Map error:', e);
             });
 
+            map.current.on('mousemove', (e) => {
+                if (!coordDebugEnabledRef.current) return;
+                setHoverCoords({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+            });
+
+            map.current.on('mouseleave', () => {
+                setHoverCoords(null);
+            });
+
             map.current.on('styledata', () => {
                 console.log('Map style loaded successfully');
             });
@@ -189,6 +244,74 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                     return false;
                 };
 
+                const bringCampusOutlineToFront = () => {
+                    if (!map.current) return;
+                    for (const id of [
+                        'nust-lower-campus-fill',
+                        'nust-lower-campus-outline-glow',
+                        'nust-lower-campus-outline',
+                    ]) {
+                        if (map.current.getLayer(id)) {
+                            try { map.current.moveLayer(id); } catch {}
+                        }
+                    }
+                };
+
+                const loadLowerCampusOutline = () => {
+                    if (!map.current || map.current.getSource('nust-lower-campus')) return;
+
+                    fetch('/data/nust-lower-campus.geojson')
+                        .then((r) => r.ok ? r.json() : Promise.reject(new Error('lower campus 404')))
+                        .then((gj) => {
+                            if (!map.current) return;
+                            map.current.addSource('nust-lower-campus', { type: 'geojson', data: gj } as any);
+
+                            if (!map.current.getLayer('nust-lower-campus-fill')) {
+                                map.current.addLayer({
+                                    id: 'nust-lower-campus-fill',
+                                    type: 'fill',
+                                    source: 'nust-lower-campus',
+                                    paint: {
+                                        'fill-color': '#3B82F6',
+                                        'fill-opacity': 0.06,
+                                    },
+                                } as any);
+                            }
+                            if (!map.current.getLayer('nust-lower-campus-outline-glow')) {
+                                map.current.addLayer({
+                                    id: 'nust-lower-campus-outline-glow',
+                                    type: 'line',
+                                    source: 'nust-lower-campus',
+                                    paint: {
+                                        'line-color': '#2563EB',
+                                        'line-width': 8,
+                                        'line-opacity': 0.2,
+                                        'line-blur': 2,
+                                    },
+                                } as any);
+                            }
+                            if (!map.current.getLayer('nust-lower-campus-outline')) {
+                                map.current.addLayer({
+                                    id: 'nust-lower-campus-outline',
+                                    type: 'line',
+                                    source: 'nust-lower-campus',
+                                    paint: {
+                                        'line-color': '#1D4ED8',
+                                        'line-width': ['interpolate', ['linear'], ['zoom'], 14, 2, 17, 3.5, 19, 5],
+                                        'line-opacity': 0.95,
+                                    },
+                                    layout: {
+                                        'line-join': 'round',
+                                        'line-cap': 'round',
+                                    },
+                                } as any);
+                            }
+
+                            bringCampusOutlineToFront();
+                        })
+                        .catch((err) => console.warn('Lower campus outline failed to load', err));
+                };
+
                 try {
                     const campusMap = map.current;
                     if (campusMap && !campusMap.getSource('nust-campus')) {
@@ -208,6 +331,31 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                     }
                                 };
                                 (gj.features || []).forEach((f: any) => addCoords(f.geometry?.coordinates));
+
+                                const applyCampusBounds = (extraBounds?: maplibregl.LngLatBounds) => {
+                                    const b = new maplibregl.LngLatBounds();
+                                    if (!bounds.isEmpty()) {
+                                        b.extend(bounds.getSouthWest());
+                                        b.extend(bounds.getNorthEast());
+                                    }
+                                    if (extraBounds && !extraBounds.isEmpty()) {
+                                        b.extend(extraBounds.getSouthWest());
+                                        b.extend(extraBounds.getNorthEast());
+                                    }
+                                    if (b.isEmpty()) return;
+
+                                    map.current!.fitBounds(b, { padding: 40, duration: 700 });
+                                    const padLng = 0.0025;
+                                    const padLat = 0.0025;
+                                    const sw0 = b.getSouthWest();
+                                    const ne0 = b.getNorthEast();
+                                    map.current!.setMaxBounds(new maplibregl.LngLatBounds(
+                                        [sw0.lng - padLng, sw0.lat - padLat],
+                                        [ne0.lng + padLng, ne0.lat + padLat],
+                                    ));
+                                    return b;
+                                };
+
                                 // cache rings for pointInPolygon (support Polygon and MultiPolygon outer rings)
                                 try {
                                     campusRings = [];
@@ -217,18 +365,26 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                         if (g.type === 'MultiPolygon') for (const poly of g.coordinates || []) if (poly?.[0]) campusRings.push(poly[0]);
                                     }
                                 } catch {}
-                                if (!bounds.isEmpty()) {
-                                    map.current!.fitBounds(bounds, { padding: 40, duration: 700 });
-                                    // Limit the map to NUST plus a small surrounding buffer (~150m)
-                                    const padLng = 0.0015; // ~150m
-                                    const padLat = 0.0015; // ~150m
-                                    const sw0 = bounds.getSouthWest();
-                                    const ne0 = bounds.getNorthEast();
-                                    const paddedSW = [sw0.lng - padLng, sw0.lat - padLat] as [number, number];
-                                    const paddedNE = [ne0.lng + padLng, ne0.lat + padLat] as [number, number];
-                                    const paddedBounds = new maplibregl.LngLatBounds(paddedSW, paddedNE);
-                                    map.current!.setMaxBounds(paddedBounds);
-                                }
+
+                                let campusBounds = applyCampusBounds();
+
+                                // Extend bounds with all building markers so east campus is never clipped
+                                fetch('/data/nust-buildings.geojson')
+                                    .then((r) => r.ok ? r.json() : null)
+                                    .then((buildings) => {
+                                        if (!map.current || !buildings?.features) return;
+                                        const bldBounds = new maplibregl.LngLatBounds();
+                                        for (const f of buildings.features) {
+                                            const c = f.geometry?.coordinates;
+                                            if (Array.isArray(c) && typeof c[0] === 'number') {
+                                                bldBounds.extend(c as [number, number]);
+                                            }
+                                        }
+                                        if (!bldBounds.isEmpty()) {
+                                            campusBounds = applyCampusBounds(bldBounds) ?? campusBounds;
+                                        }
+                                    })
+                                    .catch(() => {});
 
                                 // Build fade masks: near (dim) and far (opaque) with correct bounds
                                 try {
@@ -262,11 +418,14 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                             (map.current!.getSource('outside-mask-near') as any).setData(nearMask);
                                         }
 
-                                        // Far white: hide everything outside a small padded rectangle around campus (~100m)
-                                        const padLngFar = 0.001; // ~100m
-                                        const padLatFar = 0.001; // ~100m
-                                        const sw = bounds.getSouthWest();
-                                        const ne = bounds.getNorthEast();
+                                        // Far white: hide everything outside a padded rectangle around campus
+                                        const padLngFar = 0.0025;
+                                        const padLatFar = 0.0025;
+                                        const viewBounds = campusBounds && !campusBounds.isEmpty()
+                                            ? campusBounds
+                                            : bounds;
+                                        const sw = viewBounds.getSouthWest();
+                                        const ne = viewBounds.getNorthEast();
                                         const rect = [
                                             [sw.lng - padLngFar, sw.lat - padLatFar],
                                             [ne.lng + padLngFar, sw.lat - padLatFar],
@@ -301,6 +460,8 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                 } catch (e) {
                     console.warn('nust-campus source not available', e);
                 }
+
+                loadLowerCampusOutline();
 
                 // Load campus labels (buildings, gates, amenities) from local GeoJSON
                 try {
@@ -396,7 +557,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                     const props = e.features[0].properties;
                                     new maplibregl.Popup()
                                         .setLngLat(e.lngLat)
-                                        .setHTML(`<div style="padding:8px"><strong>${props?.name || 'Building'}</strong></div>`)
+                                        .setHTML(`<div style="padding:8px;color:#111827"><strong style="color:#111827">${props?.name || 'Building'}</strong></div>`)
                                         .addTo(map.current!);
                                 });
                                 map.current!.on('mouseenter', 'nust-buildings-circles', () => {
@@ -405,6 +566,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                                 map.current!.on('mouseleave', 'nust-buildings-circles', () => {
                                     if (map.current) map.current.getCanvas().style.cursor = '';
                                 });
+                                bringCampusOutlineToFront();
                             } catch (e) { console.warn('buildings layer add failed', e); }
                         })
                         .catch(() => {});
@@ -412,6 +574,16 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
 
                 // Add keyboard controls
                 const handleKeyPress = (e: KeyboardEvent) => {
+                    // GPS shortcut: Press 'G' to use current location
+                    if ((e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        if (gpsBtnRef.current) {
+                            gpsBtnRef.current.click();
+                            console.log('GPS location triggered via keyboard shortcut (G)');
+                        }
+                        return;
+                    }
+                    
                     if (!map.current || !e.shiftKey) return;
                     const currentPitch = map.current.getPitch();
                     const currentBearing = map.current.getBearing();
@@ -443,6 +615,8 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                     let selecting: 'start' | 'end' | null = null;
                     let startPt: [number, number] | null = null;
                     let endPt: [number, number] | null = null;
+                    let startLabel = '';
+                    let endLabel = '';
                     // Walking graph (nodes/edges) for A*
                     type NodeId = string;
                     type Node = { id: NodeId; lng: number; lat: number; edges: Array<{ to: NodeId; w: number }> };
@@ -865,15 +1039,22 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             if (map.current!.getSource('walk-snap-segs')) map.current!.removeSource('walk-snap-segs');
                         } catch {}
                     };
-                    const setPoint = (which: 'start' | 'end', lng: number, lat: number) => {
+                    const notifyRouteState = () => {
+                        onRouteStateChange?.({ start: startLabel, end: endLabel });
+                    };
+
+                    const setPoint = (which: 'start' | 'end', lng: number, lat: number, label?: string) => {
                         const feature = { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [lng, lat] } } as any;
                         if (which === 'start') {
                             startPt = [lng, lat];
+                            if (label !== undefined) startLabel = label;
                             (map.current!.getSource('walk-start') as any)?.setData?.({ type: 'FeatureCollection', features: [feature] });
                         } else {
                             endPt = [lng, lat];
+                            if (label !== undefined) endLabel = label;
                             (map.current!.getSource('walk-end') as any)?.setData?.({ type: 'FeatureCollection', features: [feature] });
                         }
+                        notifyRouteState();
                     };
 
                     // OSRM fallback disabled: campus routing uses A* only.
@@ -907,7 +1088,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                             if (!path || path.length < 2) {
                                 routePopup = new maplibregl.Popup()
                                     .setLngLat([(startPt[0] + endPt[0]) / 2, (startPt[1] + endPt[1]) / 2])
-                                    .setHTML('<div style="padding:8px">No walking path found between points.</div>')
+                                    .setHTML('<div style="padding:8px;color:#111827">No walking path found between points.</div>')
                                     .addTo(map.current!);
                                 try { sVirt.cleanup(); eVirt.cleanup(); } catch {}
                                 // OSRM fallback removed by request; report A* failure only.
@@ -922,7 +1103,7 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                         const minutes = Math.round(meters / 1.4 / 60);
                         routePopup = new maplibregl.Popup()
                             .setLngLat([(startPt[0] + endPt[0]) / 2, (startPt[1] + endPt[1]) / 2])
-                            .setHTML(`<div style=\"padding:8px\"><strong>Walking route (A*)</strong><br/>Distance: ${(meters/1000).toFixed(2)} km<br/>Duration: ~${minutes} min</div>`)
+                            .setHTML(`<div style="padding:8px;color:#111827"><strong style="color:#111827">Walking route (A*)</strong><br/>Distance: ${(meters/1000).toFixed(2)} km<br/>Duration: ~${minutes} min</div>`)
                             .addTo(map.current!);
                         try { sVirt.cleanup(); eVirt.cleanup(); } catch {}
                         try {
@@ -934,11 +1115,114 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                     };
                     const clearWalk = () => {
                         startPt = null; endPt = null;
+                        startLabel = ''; endLabel = '';
                         if (map.current!.getSource('walk-start')) (map.current!.getSource('walk-start') as any).setData({ type: 'FeatureCollection', features: [] });
                         if (map.current!.getSource('walk-end')) (map.current!.getSource('walk-end') as any).setData({ type: 'FeatureCollection', features: [] });
                         if (map.current!.getSource('walk-route')) (map.current!.getSource('walk-route') as any).setData({ type: 'FeatureCollection', features: [] });
                         removeDebugLayers();
                         if (routePopup) { try { routePopup.remove(); } catch {} routePopup = null; }
+                        notifyRouteState();
+                    };
+
+                    const geocodeAndSet = async (which: 'start' | 'end', text: string) => {
+                        const t = text.trim(); if (!t) return;
+                        const comma = t.indexOf(',');
+                        if (comma !== -1) {
+                            const a = parseFloat(t.slice(0, comma));
+                            const b = parseFloat(t.slice(comma + 1));
+                            if (!Number.isNaN(a) && !Number.isNaN(b)) { setPoint(which, a, b, t); await tryComputeRoute(); return; }
+                        }
+                        try {
+                            if (labelsCache?.features?.length) {
+                                const q = t.toLowerCase();
+                                let best: any = null; let bestScore = -1; let bestName = t;
+                                for (const f of labelsCache.features) {
+                                    const name = (f.properties?.name || f.properties?.amenity || f.properties?.building || '').toString();
+                                    if (!name) continue;
+                                    const nm = name.toLowerCase();
+                                    if (nm.includes(q)) {
+                                        const c = f.geometry?.coordinates;
+                                        if (Array.isArray(c)) {
+                                            const center = map.current!.getCenter();
+                                            const dx = Math.abs(center.lng - c[0]);
+                                            const dy = Math.abs(center.lat - c[1]);
+                                            const score = 1 / (dx + dy + 1e-6);
+                                            if (score > bestScore) { bestScore = score; best = c; bestName = name; }
+                                        }
+                                    }
+                                }
+                                if (best) { setPoint(which, best[0], best[1], bestName); await tryComputeRoute(); return; }
+                            }
+                        } catch {}
+                        const localMatch = knownLocations.find(loc => loc.name.toLowerCase().includes(t.toLowerCase()));
+                        if (localMatch) {
+                            setPoint(which, localMatch.coordinates[0], localMatch.coordinates[1], localMatch.name);
+                            await tryComputeRoute();
+                            return;
+                        }
+                        try {
+                            const bnds = map.current!.getBounds();
+                            const west = bnds.getWest(), south = bnds.getSouth(), east = bnds.getEast(), north = bnds.getNorth();
+                            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&bounded=1&viewbox=${west},${north},${east},${south}&q=${encodeURIComponent(t)}`;
+                            const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                            const j = await r.json();
+                            if (Array.isArray(j) && j.length) {
+                                const { lon, lat, display_name } = j[0];
+                                setPoint(which, parseFloat(lon), parseFloat(lat), display_name || t);
+                                await tryComputeRoute();
+                            }
+                        } catch {}
+                    };
+
+                    const swapPoints = () => {
+                        if (!startPt && !endPt) return;
+                        const tmpPt = startPt; startPt = endPt; endPt = tmpPt;
+                        const tmpLabel = startLabel; startLabel = endLabel; endLabel = tmpLabel;
+                        if (startPt) setPoint('start', startPt[0], startPt[1]);
+                        else if (map.current!.getSource('walk-start')) (map.current!.getSource('walk-start') as any).setData({ type: 'FeatureCollection', features: [] });
+                        if (endPt) setPoint('end', endPt[0], endPt[1]);
+                        else if (map.current!.getSource('walk-end')) (map.current!.getSource('walk-end') as any).setData({ type: 'FeatureCollection', features: [] });
+                        notifyRouteState();
+                        tryComputeRoute();
+                    };
+
+                    const triggerGps = () => {
+                        if (!navigator.geolocation) {
+                            alert('Geolocation is not supported by your browser.');
+                            return;
+                        }
+                        const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                        if (!isSecure) {
+                            alert('Geolocation requires HTTPS or localhost.');
+                            return;
+                        }
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                const lng = pos.coords.longitude;
+                                const lat = pos.coords.latitude;
+                                const accuracy = pos.coords.accuracy;
+                                const label = `My Location (±${Math.round(accuracy)}m)`;
+                                setPoint('start', lng, lat, label);
+                                map.current?.flyTo({ center: [lng, lat], zoom: 18, duration: 1000 });
+                                tryComputeRoute();
+                            },
+                            (err) => {
+                                let errorMsg = 'Could not get your location';
+                                switch (err.code) {
+                                    case err.PERMISSION_DENIED:
+                                        errorMsg = 'Permission denied. Please allow location access in your browser settings.';
+                                        break;
+                                    case err.POSITION_UNAVAILABLE:
+                                        errorMsg = 'Location unavailable. Try turning on GPS.';
+                                        break;
+                                    case err.TIMEOUT:
+                                        errorMsg = 'Location request timed out. Please try again.';
+                                        break;
+                                }
+                                alert(errorMsg);
+                            },
+                            { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+                        );
                     };
 
                     // Prepare start/end sources and layers
@@ -947,451 +1231,28 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                     if (!map.current!.getSource('walk-end')) map.current!.addSource('walk-end', { type: 'geojson', data: { type:'FeatureCollection', features: [] } } as any);
                     if (!map.current!.getLayer('walk-end')) map.current!.addLayer({ id: 'walk-end', type: 'circle', source: 'walk-end', paint: { 'circle-radius': 7, 'circle-color': '#EF4444', 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } } as any);
 
-                    // Control: inputs + buttons
-                    class WalkControl {
-                        _c: HTMLElement | null = null;
-                        onAdd() {
-                            // Debug: check if knownLocations is loaded
-                            console.log('WalkControl.onAdd() called');
-                            console.log('knownLocations available:', knownLocations);
-                            console.log('knownLocations length:', knownLocations?.length || 0);
-                            
-                            const c = document.createElement('div');
-                            c.className = 'maplibregl-ctrl';
-                            c.style.background = 'transparent';
-                            c.style.backdropFilter = '';
-                            c.style.padding = '6px 8px';
-                            c.style.border = 'none';
-                            c.style.borderRadius = '9999px';
-                            c.style.display = 'flex';
-                            c.style.flexWrap = 'wrap';
-                            c.style.gap = '8px';
-                            c.style.alignItems = 'center';
-                            c.style.boxShadow = 'none';
-                            c.style.maxWidth = 'min(95vw, 980px)';
-                            c.style.overflow = 'visible';
-                            c.style.position = 'relative';
+                    // Expose walk API for React search component
+                    walkApiRef.current = {
+                        setPoint: (which, lng, lat, label) => {
+                            setPoint(which, lng, lat, label);
+                            tryComputeRoute();
+                        },
+                        clearWalk,
+                        tryComputeRoute,
+                        geocodeAndSet,
+                        setSelecting: (mode) => { selecting = mode; },
+                        swapPoints,
+                        getLabels: () => ({ start: startLabel, end: endLabel }),
+                    };
 
-                            const mk = (t: string) => {
-                                const b = document.createElement('div');
-                                b.textContent = t;
-                                b.setAttribute('role', 'button');
-                                (b as any).tabIndex = 0;
-                                b.style.padding = '8px 12px';
-                                b.style.cursor = 'pointer';
-                                b.style.border = '1px solid #e5e7eb';
-                                b.style.borderRadius = '9999px';
-                                b.style.background = '#F9FAFB';
-                                b.style.color = '#111827';
-                                b.style.fontSize = '12px';
-                                b.style.fontWeight = '600';
-                                b.style.whiteSpace = 'nowrap';
-                                b.style.transition = 'all 120ms ease-in-out';
-                                b.style.width = 'auto';
-                                b.style.height = 'auto';
-                                b.style.minHeight = '32px';
-                                b.style.minWidth = '60px';
-                                b.style.lineHeight = '1.2';
-                                b.style.display = 'inline-flex';
-                                b.style.alignItems = 'center';
-                                b.style.justifyContent = 'center';
-                                b.style.flexShrink = '0';
-                                b.style.overflow = 'visible';
-                                b.style.boxSizing = 'border-box';
-                                b.onmouseenter = () => { b.style.background = '#F3F4F6'; };
-                                b.onmouseleave = () => { b.style.background = '#F9FAFB'; };
-                                return b;
-                            };
+                    // Hidden GPS trigger for header button
+                    const gpsBtn = document.createElement('button');
+                    gpsBtn.style.display = 'none';
+                    gpsBtn.setAttribute('data-gps-btn', 'true');
+                    gpsBtnRef.current = gpsBtn;
+                    gpsBtn.onclick = () => triggerGps();
+                    document.body.appendChild(gpsBtn);
 
-                            // Start input with autocomplete
-                            const startDiv = document.createElement('div');
-                            startDiv.style.position = 'relative';
-                            startDiv.style.zIndex = '1100';
-                            const is = document.createElement('input');
-                            is.type = 'text'; is.placeholder = 'Start: building or street name';
-                            is.style.padding = '8px 10px';
-                            is.style.border = '1px solid #e5e7eb';
-                            is.style.borderRadius = '9999px';
-                            is.style.fontSize = '12px';
-                            is.style.width = 'min(40vw, 240px)';
-                            is.style.background = '#FFFFFF';
-                            is.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)';
-                            is.style.transition = 'box-shadow 120ms ease-in-out, border-color 120ms ease-in-out';
-                            is.onfocus = () => { is.style.borderColor = '#60A5FA'; is.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.25)'; };
-                            is.onblur = () => { is.style.borderColor = '#e5e7eb'; is.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)'; };
-                            startDiv.appendChild(is);
-                            const startDropdown = document.createElement('ul');
-                            startDropdown.style.position = 'fixed';
-                            startDropdown.style.background = '#fff';
-                            startDropdown.style.color = '#111827';
-                            startDropdown.style.border = '1px solid #e5e7eb';
-                            startDropdown.style.borderRadius = '8px';
-                            startDropdown.style.zIndex = '9999';
-                            startDropdown.style.listStyle = 'none';
-                            startDropdown.style.padding = '0';
-                            startDropdown.style.margin = '0';
-                            startDropdown.style.maxHeight = '200px';
-                            startDropdown.style.overflowY = 'auto';
-                            startDropdown.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                            startDropdown.style.display = 'none';
-                            document.body.appendChild(startDropdown);
-                            is.addEventListener('input', function (ev) {
-                                const val = is.value.trim().toLowerCase();
-                                startDropdown.innerHTML = '';
-                                console.log('Start input changed:', val);
-                                if (!val) { 
-                                    console.log('Start dropdown hidden (empty input)');
-                                    startDropdown.style.display = 'none'; 
-                                    return; 
-                                }
-                                const matches = knownLocations.filter(loc => loc.name.toLowerCase().includes(val));
-                                console.log('Start matches found:', matches.length);
-                                if (matches.length === 0) { 
-                                    console.log('Start dropdown hidden (no matches)');
-                                    startDropdown.style.display = 'none'; 
-                                    return; 
-                                }
-                                matches.forEach(loc => {
-                                    const li = document.createElement('li');
-                                    li.textContent = loc.name;
-                                    li.style.padding = '8px 12px';
-                                    li.style.cursor = 'pointer';
-                                    li.style.borderBottom = '1px solid #f3f4f6';
-                                    li.addEventListener('mouseenter', () => { li.style.background = '#f3f4f6'; });
-                                    li.addEventListener('mouseleave', () => { li.style.background = 'transparent'; });
-                                    li.addEventListener('mousedown', (event) => {
-                                        event.preventDefault();
-                                        is.value = loc.name;
-                                        startDropdown.style.display = 'none';
-                                        setPoint('start', loc.coordinates[0], loc.coordinates[1]);
-                                    });
-                                    startDropdown.appendChild(li);
-                                });
-                                console.log('Start dropdown showing with', matches.length, 'options');
-                                const sr = is.getBoundingClientRect();
-                                startDropdown.style.top = (sr.bottom + 2) + 'px';
-                                startDropdown.style.left = sr.left + 'px';
-                                startDropdown.style.width = sr.width + 'px';
-                                startDropdown.style.display = 'block';
-                            });
-                            is.addEventListener('focus', () => {
-                                console.log('Start input focused');
-                                if (is.value.trim().length > 0) {
-                                    const sr = is.getBoundingClientRect();
-                                    startDropdown.style.top = (sr.bottom + 2) + 'px';
-                                    startDropdown.style.left = sr.left + 'px';
-                                    startDropdown.style.width = sr.width + 'px';
-                                    startDropdown.style.display = 'block';
-                                }
-                            });
-                            // Handle outside clicks using event delegation with proper type checking
-                            const startClickHandler = (e: any) => {
-                                if (e.target instanceof Node && !startDiv.contains(e.target)) {
-                                    console.log('Start dropdown closed by outside click');
-                                    startDropdown.style.display = 'none';
-                                }
-                            };
-                            document.addEventListener('click', startClickHandler);
-
-                            // End input with autocomplete
-                            const endDiv = document.createElement('div');
-                            endDiv.style.position = 'relative';
-                            endDiv.style.zIndex = '1100';
-                            const ie = document.createElement('input');
-                            ie.type = 'text'; ie.placeholder = 'Destination: building or street name';
-                            ie.style.padding = '8px 10px';
-                            ie.style.border = '1px solid #e5e7eb';
-                            ie.style.borderRadius = '9999px';
-                            ie.style.fontSize = '12px';
-                            ie.style.width = 'min(45vw, 300px)';
-                            ie.style.background = '#FFFFFF';
-                            ie.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)';
-                            ie.style.transition = 'box-shadow 120ms ease-in-out, border-color 120ms ease-in-out';
-                            ie.onfocus = () => { ie.style.borderColor = '#60A5FA'; ie.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.25)'; };
-                            ie.onblur = () => { ie.style.borderColor = '#e5e7eb'; ie.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.04)'; };
-                            endDiv.appendChild(ie);
-                            const endDropdown = document.createElement('ul');
-                            endDropdown.style.position = 'fixed';
-                            endDropdown.style.background = '#fff';
-                            endDropdown.style.color = '#111827';
-                            endDropdown.style.border = '1px solid #e5e7eb';
-                            endDropdown.style.borderRadius = '8px';
-                            endDropdown.style.zIndex = '9999';
-                            endDropdown.style.listStyle = 'none';
-                            endDropdown.style.padding = '0';
-                            endDropdown.style.margin = '0';
-                            endDropdown.style.maxHeight = '200px';
-                            endDropdown.style.overflowY = 'auto';
-                            endDropdown.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-                            endDropdown.style.display = 'none';
-                            document.body.appendChild(endDropdown);
-                            ie.addEventListener('input', function (ev) {
-                                const val = ie.value.trim().toLowerCase();
-                                endDropdown.innerHTML = '';
-                                console.log('End input changed:', val);
-                                if (!val) { 
-                                    console.log('End dropdown hidden (empty input)');
-                                    endDropdown.style.display = 'none'; 
-                                    return; 
-                                }
-                                const matches = knownLocations.filter(loc => loc.name.toLowerCase().includes(val));
-                                console.log('End matches found:', matches.length);
-                                if (matches.length === 0) { 
-                                    console.log('End dropdown hidden (no matches)');
-                                    endDropdown.style.display = 'none'; 
-                                    return; 
-                                }
-                                matches.forEach(loc => {
-                                    const li = document.createElement('li');
-                                    li.textContent = loc.name;
-                                    li.style.padding = '8px 12px';
-                                    li.style.cursor = 'pointer';
-                                    li.style.borderBottom = '1px solid #f3f4f6';
-                                    li.addEventListener('mouseenter', () => { li.style.background = '#f3f4f6'; });
-                                    li.addEventListener('mouseleave', () => { li.style.background = 'transparent'; });
-                                    li.addEventListener('mousedown', (event) => {
-                                        event.preventDefault();
-                                        ie.value = loc.name;
-                                        endDropdown.style.display = 'none';
-                                        setPoint('end', loc.coordinates[0], loc.coordinates[1]);
-                                    });
-                                    endDropdown.appendChild(li);
-                                });
-                                console.log('End dropdown showing with', matches.length, 'options');
-                                const er = ie.getBoundingClientRect();
-                                endDropdown.style.top = (er.bottom + 2) + 'px';
-                                endDropdown.style.left = er.left + 'px';
-                                endDropdown.style.width = er.width + 'px';
-                                endDropdown.style.display = 'block';
-                            });
-                            ie.addEventListener('focus', () => {
-                                console.log('End input focused');
-                                if (ie.value.trim().length > 0) {
-                                    const er = ie.getBoundingClientRect();
-                                    endDropdown.style.top = (er.bottom + 2) + 'px';
-                                    endDropdown.style.left = er.left + 'px';
-                                    endDropdown.style.width = er.width + 'px';
-                                    endDropdown.style.display = 'block';
-                                }
-                            });
-                            // Handle outside clicks using event delegation with proper type checking
-                            const endClickHandler = (e: any) => {
-                                if (e.target instanceof Node && !endDiv.contains(e.target)) {
-                                    console.log('End dropdown closed by outside click');
-                                    endDropdown.style.display = 'none';
-                                }
-                            };
-                            document.addEventListener('click', endClickHandler);
-
-                            const bs = mk('Start');
-                            const bc = mk('Clear');
-                            bs.style.minWidth = '72px';
-                            bc.style.minWidth = '72px';
-                            bs.style.flex = '0 0 auto';
-                            bc.style.flex = '0 0 auto';
-
-                            const setActive = (mode: 'start' | 'end' | null) => {
-                                selecting = mode;
-                                // reset styles
-                                [bs].forEach(btn => { btn.style.background = '#16A34A'; btn.style.color = '#ffffff'; btn.style.borderColor = '#16A34A'; btn.onmouseenter = () => { btn.style.background = '#15803D'; }; btn.onmouseleave = () => { btn.style.background = '#16A34A'; }; });
-                                if (mode === 'start') { bs.style.background = '#16A34A'; bs.style.color = '#ffffff'; }
-                            };
-
-                            bs.title = 'Click, then pick a start point on the map';
-                            bc.title = 'Clear start, destination and route';
-
-                            bs.onclick = () => setActive('start');
-                            bc.onclick = () => { setActive(null); clearWalk(); };
-
-                            // Geocode helper: parse lng,lat or query Nominatim inside current bounds
-                            const geocodeAndSet = async (which: 'start'|'end', text: string) => {
-                                const t = text.trim(); if (!t) return;
-                                const comma = t.indexOf(',');
-                                if (comma !== -1) {
-                                    const a = parseFloat(t.slice(0, comma));
-                                    const b = parseFloat(t.slice(comma + 1));
-                                    if (!Number.isNaN(a) && !Number.isNaN(b)) { setPoint(which, a, b); await tryComputeRoute(); return; }
-                                }
-                                // 1) Try local labels cache first (case-insensitive substring)
-                                try {
-                                    if (labelsCache?.features?.length) {
-                                        const q = t.toLowerCase();
-                                        let best: any = null; let bestScore = -1;
-                                        for (const f of labelsCache.features) {
-                                            const name = (f.properties?.name || f.properties?.amenity || f.properties?.building || '').toString();
-                                            if (!name) continue;
-                                            const nm = name.toLowerCase();
-                                            if (nm.includes(q)) {
-                                                // prefer closer label to map center
-                                                const c = f.geometry?.coordinates;
-                                                if (Array.isArray(c)) {
-                                                    const center = map.current!.getCenter();
-                                                    const dx = Math.abs(center.lng - c[0]);
-                                                    const dy = Math.abs(center.lat - c[1]);
-                                                    const score = 1 / (dx + dy + 1e-6);
-                                                    if (score > bestScore) { bestScore = score; best = c; }
-                                                }
-                                            }
-                                        }
-                                        if (best) { setPoint(which, best[0], best[1]); await tryComputeRoute(); return; }
-                                    }
-                                } catch {}
-                                try {
-                                    const bnds = map.current!.getBounds();
-                                    const west = bnds.getWest(), south = bnds.getSouth(), east = bnds.getEast(), north = bnds.getNorth();
-                                    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&bounded=1&viewbox=${west},${north},${east},${south}&q=${encodeURIComponent(t)}`;
-                                    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-                                    const j = await r.json();
-                                    if (Array.isArray(j) && j.length) {
-                                        const { lon, lat } = j[0];
-                                        setPoint(which, parseFloat(lon), parseFloat(lat));
-                                        await tryComputeRoute();
-                                    }
-                                } catch {}
-                            };
-
-                            is.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') geocodeAndSet('start', is.value); });
-                            ie.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') geocodeAndSet('end', ie.value); });
-
-                            // Small Set buttons next to inputs (no need to press Enter)
-                            const gs = mk('Set'); gs.title = 'Use the Start text above';
-                            gs.style.background = '#F9FAFB';
-                            gs.style.borderColor = '#e5e7eb';
-                            gs.style.minWidth = '52px';
-                            gs.onclick = () => geocodeAndSet('start', is.value);
-                            const ge = mk('Set'); ge.title = 'Use the Destination text above';
-                            ge.style.background = '#F9FAFB';
-                            ge.style.borderColor = '#e5e7eb';
-                            ge.style.minWidth = '52px';
-                            ge.onclick = () => geocodeAndSet('end', ie.value);
-
-                            // Style Start (picker) and Clear variants
-                            bs.style.background = '#16A34A';
-                            bs.style.borderColor = '#16A34A';
-                            bs.style.color = '#ffffff';
-                            bs.onmouseenter = () => { bs.style.background = '#15803D'; };
-                            bs.onmouseleave = () => { bs.style.background = selecting === 'start' ? '#15803D' : '#16A34A'; };
-
-                            bc.style.background = '#FFFFFF';
-                            bc.style.borderColor = '#FCA5A5';
-                            bc.style.color = '#B91C1C';
-                            bc.onmouseenter = () => { bc.style.background = '#FEF2F2'; };
-                            bc.onmouseleave = () => { bc.style.background = '#FFFFFF'; };
-
-                            // Layout: input+Set groups, then action buttons grouped to stay together
-                            const wrap = (el: HTMLElement, btn: HTMLElement) => {
-                                const w = document.createElement('div');
-                                w.style.display = 'flex';
-                                w.style.gap = '8px';
-                                w.style.alignItems = 'center';
-                                w.style.background = '#FFFFFF';
-                                w.style.padding = '4px';
-                                w.style.borderRadius = '9999px';
-                                w.style.border = '1px solid #e5e7eb';
-                                w.style.flex = '1 1 auto';
-                                w.style.minWidth = '260px';
-                                w.appendChild(el); w.appendChild(btn); return w;
-                            };
-                            // Staff search bar (UI only)
-                            const staffRow = document.createElement('div');
-                            staffRow.style.display = 'flex';
-                            staffRow.style.alignItems = 'center';
-                            staffRow.style.gap = '8px';
-                            staffRow.style.background = '#FFFFFF';
-                            staffRow.style.border = '1px solid #e5e7eb';
-                            staffRow.style.borderRadius = '9999px';
-                            staffRow.style.padding = '4px 12px';
-                            staffRow.style.flex = '1 0 100%';
-                            staffRow.style.minWidth = '260px';
-
-                            const staffIcon = document.createElement('span');
-                            staffIcon.textContent = '🔍';
-                            staffIcon.style.fontSize = '13px';
-                            staffIcon.style.flexShrink = '0';
-
-                            const staffInput = document.createElement('input');
-                            staffInput.type = 'text';
-                            staffInput.placeholder = 'Search for a staff member…';
-                            staffInput.style.flex = '1';
-                            staffInput.style.border = 'none';
-                            staffInput.style.outline = 'none';
-                            staffInput.style.fontSize = '12px';
-                            staffInput.style.background = 'transparent';
-                            staffInput.style.color = '#111827';
-
-                            const staffLabel = document.createElement('span');
-                            staffLabel.textContent = 'Staff';
-                            staffLabel.style.fontSize = '10px';
-                            staffLabel.style.fontWeight = '600';
-                            staffLabel.style.color = '#6B7280';
-                            staffLabel.style.textTransform = 'uppercase';
-                            staffLabel.style.letterSpacing = '0.05em';
-                            staffLabel.style.flexShrink = '0';
-
-                            staffRow.appendChild(staffLabel);
-                            staffRow.appendChild(staffIcon);
-                            staffRow.appendChild(staffInput);
-                            c.appendChild(staffRow);
-
-                            // GPS button: set start to current device location
-                            const gpsBtn = mk('📍 My Location');
-                            gpsBtn.title = 'Use my current GPS location as the start point';
-                            gpsBtn.style.background = '#EFF6FF';
-                            gpsBtn.style.borderColor = '#BFDBFE';
-                            gpsBtn.style.color = '#1D4ED8';
-                            gpsBtn.style.minWidth = '110px';
-                            gpsBtn.onmouseenter = () => { gpsBtn.style.background = '#DBEAFE'; };
-                            gpsBtn.onmouseleave = () => { gpsBtn.style.background = '#EFF6FF'; };
-                            gpsBtn.onclick = () => {
-                                if (!navigator.geolocation) {
-                                    alert('Geolocation is not supported by your browser.');
-                                    return;
-                                }
-                                const orig = gpsBtn.textContent;
-                                gpsBtn.textContent = 'Locating…';
-                                (gpsBtn as any).style.pointerEvents = 'none';
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => {
-                                        gpsBtn.textContent = orig;
-                                        (gpsBtn as any).style.pointerEvents = '';
-                                        const lng = pos.coords.longitude;
-                                        const lat = pos.coords.latitude;
-                                        is.value = 'My Location';
-                                        setPoint('start', lng, lat);
-                                        tryComputeRoute();
-                                    },
-                                    (err) => {
-                                        gpsBtn.textContent = orig;
-                                        (gpsBtn as any).style.pointerEvents = '';
-                                        console.warn('Geolocation error:', err.message);
-                                        alert('Could not get your location: ' + err.message);
-                                    },
-                                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                                );
-                            };
-
-                            const startWrap = wrap(is, gs);
-                            startWrap.appendChild(gpsBtn);
-                            c.appendChild(startWrap);
-                            c.appendChild(wrap(ie, ge));
-                            const actions = document.createElement('div');
-                            actions.style.display = 'flex';
-                            actions.style.gap = '8px';
-                            actions.style.alignItems = 'center';
-                            actions.style.flex = '0 0 auto';
-                            actions.appendChild(bs);
-                            actions.appendChild(bc);
-                            c.appendChild(actions);
-                            this._c = c; return c;
-                        }
-                        onRemove() {
-                            if (this._c?.parentNode) this._c.parentNode.removeChild(this._c);
-                            this._c = null;
-                            if (startDropdown.parentNode) startDropdown.parentNode.removeChild(startDropdown);
-                            if (endDropdown.parentNode) endDropdown.parentNode.removeChild(endDropdown);
-                        }
-                    }
-                    map.current!.addControl(new (WalkControl as any)(), 'top-left');
 
                     // Click handler to place points and compute route
                     map.current!.on('click', async (e) => {
@@ -1551,8 +1412,8 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                         'text-allow-overlap': false
                     },
                     paint: {
-                        'text-color': '#ffffff',
-                        'text-halo-color': '#000000',
+                        'text-color': '#111827',
+                        'text-halo-color': '#ffffff',
                         'text-halo-width': 2
                     }
                 });
@@ -1563,8 +1424,8 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                         new Popup()
                             .setLngLat(e.lngLat)
                             .setHTML(`
-                                <div style="padding: 8px;">
-                                    <strong>${props?.name || 'Building'}</strong><br/>
+                                <div style="padding:8px;color:#111827">
+                                    <strong style="color:#111827">${props?.name || 'Building'}</strong><br/>
                                     Height: ${props?.height || 'N/A'}m<br/>
                                     Campus: ${props?.campus || 'N/A'}
                                 </div>
@@ -1675,9 +1536,9 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
                         new Popup()
                             .setLngLat(e.lngLat)
                             .setHTML(`
-                                <div style="padding: 8px;">
-                                    <strong>${props?.name || 'Location'}</strong><br/>
-                                    <span style="color: #666; font-size: 12px;">${props?.type || ''}</span>
+                                <div style="padding:8px;color:#111827">
+                                    <strong style="color:#111827">${props?.name || 'Location'}</strong><br/>
+                                    <span style="color:#666;font-size:12px">${props?.type || ''}</span>
                                 </div>
                             `)
                             .addTo(map.current!);
@@ -1741,8 +1602,8 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
     }, []);
 
     useImperativeHandle(ref, () => ({
-        findRoute: () => {},
-        clearRoute: () => {},
+        findRoute: () => { walkApiRef.current?.tryComputeRoute(); },
+        clearRoute: () => { walkApiRef.current?.clearWalk(); },
         goToMainCampus: () => {
             if (!map.current) return;
             map.current.easeTo({ center: CAMPUS_LOCATIONS.main, zoom: 17, pitch: 45, bearing: 0, duration: 1000 });
@@ -1750,19 +1611,28 @@ const MapComponent = forwardRef<MapComponentRef>((props, ref) => {
         goToLowerCampus: () => {
             if (!map.current) return;
             map.current.easeTo({ center: CAMPUS_LOCATIONS.lower, zoom: 17, pitch: 45, bearing: 0, duration: 1000 });
-        }
+        },
+        setStart: (lng, lat, label) => { walkApiRef.current?.setPoint('start', lng, lat, label); },
+        setEnd: (lng, lat, label) => { walkApiRef.current?.setPoint('end', lng, lat, label); },
+        flyTo: (lng, lat, zoom = 18) => { map.current?.flyTo({ center: [lng, lat], zoom, duration: 800 }); },
+        geocodeAndSet: (which, text) => walkApiRef.current?.geocodeAndSet(which, text) ?? Promise.resolve(),
+        useGpsLocation: () => { gpsBtnRef.current?.click(); },
+        startMapPick: (which) => { walkApiRef.current?.setSelecting(which); },
+        swapPoints: () => { walkApiRef.current?.swapPoints(); },
     }));
 
     return (
-        <div 
-            ref={mapContainer} 
-            style={{ 
-                width: '100%', 
-                height: '100%',
-                minHeight: '500px',
-                position: 'relative'
-            }} 
-        />
+        <div className="relative w-full h-full" style={{ minHeight: '500px' }}>
+            <div
+                ref={mapContainer}
+                className="w-full h-full"
+            />
+            <MapCoordinateDebug
+                enabled={coordDebugEnabled}
+                onToggle={toggleCoordDebug}
+                coords={hoverCoords}
+            />
+        </div>
     );
 });
 
