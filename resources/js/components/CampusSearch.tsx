@@ -9,6 +9,7 @@ import {
     Car,
     CreditCard,
     Home,
+    User,
     Navigation,
     ArrowLeftRight,
     Circle,
@@ -45,6 +46,8 @@ function ResultIcon({ type }: { type: SearchResult['type'] }) {
             return <CreditCard className={cls} />;
         case 'indoor':
             return <Building2 className={cls} />;
+        case 'staff':
+            return <User className={cls} />;
         default:
             return <MapPin className={cls} />;
     }
@@ -141,19 +144,22 @@ export default function CampusSearch({ mapRef, startLabel = '', endLabel = '', s
 
         if (!result.coordinates) return;
         const [lng, lat] = result.coordinates;
+        const destinationLabel = result.type === 'staff' && result.roomNo
+            ? `${result.name} (Room ${result.roomNo})`
+            : result.name;
 
         if (mode === 'directions') {
             if (activeField === 'origin') {
-                map.setStart(lng, lat, result.name);
-                setOrigin(result.name);
+                map.setStart(lng, lat, destinationLabel);
+                setOrigin(destinationLabel);
             } else {
-                map.setEnd(lng, lat, result.name);
-                setDestination(result.name);
+                map.setEnd(lng, lat, destinationLabel);
+                setDestination(destinationLabel);
             }
         } else {
             map.flyTo(lng, lat);
-            map.setEnd(lng, lat, result.name);
-            setDestination(result.name);
+            map.setEnd(lng, lat, destinationLabel);
+            setDestination(destinationLabel);
         }
     };
 

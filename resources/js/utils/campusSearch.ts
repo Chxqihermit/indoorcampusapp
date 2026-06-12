@@ -1,6 +1,6 @@
 import { knownLocations } from '@/components/knownLocations';
 
-export type SearchResultType = 'building' | 'indoor' | 'recent' | 'gate' | 'parking' | 'restaurant' | 'atm';
+export type SearchResultType = 'building' | 'indoor' | 'staff' | 'recent' | 'gate' | 'parking' | 'restaurant' | 'atm';
 
 export interface SearchResult {
     id: string;
@@ -10,6 +10,10 @@ export interface SearchResult {
     coordinates?: [number, number];
     indoorId?: number;
     floorId?: number;
+    staffId?: number;
+    buildingId?: string;
+    roomNo?: string;
+    email?: string;
 }
 
 const RECENT_KEY = 'campusnav-recent-searches';
@@ -62,6 +66,45 @@ export function searchCampusLocations(query: string): SearchResult[] {
     return buildingResults;
 }
 
+export async function searchStaff(query: string): Promise<SearchResult[]> {
+    const q = query.trim();
+    if (!q || q.length < 2) return [];
+
+    try {
+        const res = await fetch(`/api/staff/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data as Array<{
+            id: number;
+            full_name: string;
+            staff_position: string | null;
+            email: string | null;
+            building_id: string;
+            building_name: string | null;
+            room_no: string | null;
+            coordinates: [number, number] | null;
+        }>).map((member) => {
+            const buildingLabel = member.building_name ?? member.building_id;
+            const roomLabel = member.room_no ? `, Room ${member.room_no}` : '';
+            const roleLabel = member.staff_position ? ` · ${member.staff_position}` : '';
+
+            return {
+                id: `staff-${member.id}`,
+                name: member.full_name,
+                subtitle: `${buildingLabel}${roomLabel}${roleLabel}`,
+                type: 'staff' as const,
+                coordinates: member.coordinates ?? undefined,
+                staffId: member.id,
+                buildingId: member.building_id,
+                roomNo: member.room_no ?? undefined,
+                email: member.email ?? undefined,
+            };
+        });
+    } catch {
+        return [];
+    }
+}
+
 export async function searchIndoorLocations(query: string): Promise<SearchResult[]> {
     const q = query.trim();
     if (!q || q.length < 2) return [];
@@ -91,18 +134,21 @@ export async function searchIndoorLocations(query: string): Promise<SearchResult
 
 export async function searchAll(query: string): Promise<SearchResult[]> {
     const campus = searchCampusLocations(query);
-    const indoor = await searchIndoorLocations(query);
+    const [indoor, staff] = await Promise.all([
+        searchIndoorLocations(query),
+        searchStaff(query),
+    ]);
 
     const seen = new Set<string>();
     const merged: SearchResult[] = [];
-    for (const r of [...campus, ...indoor]) {
-        const key = r.name.toLowerCase();
+    for (const r of [...staff, ...campus, ...indoor]) {
+        const key = `${r.type}:${r.name.toLowerCase()}`;
         if (!seen.has(key)) {
             seen.add(key);
             merged.push(r);
         }
     }
-    return merged.slice(0, 10);
+    return merged.slice(0, 12);
 }
 
 export const QUICK_CATEGORIES = [

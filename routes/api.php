@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\IndoorNavigationController;
 use App\Http\Controllers\PathController;
+use App\Http\Controllers\StaffDirectoryController;
 use App\Http\Controllers\WifiController;
 
 // ============================================
@@ -13,6 +14,7 @@ Route::get('/floor/{floorId}/graph', [IndoorNavigationController::class, 'getGra
 Route::get('/floor-plans', [IndoorNavigationController::class, 'getFloorPlans']);
 Route::post('/indoor-route', [IndoorNavigationController::class, 'calculateRoute']);
 Route::get('/locations/search', [IndoorNavigationController::class, 'searchLocations']);
+Route::get('/staff/search', [StaffDirectoryController::class, 'search']);
 Route::post('/save-geojson', [IndoorNavigationController::class, 'saveGeoJSON']);
 Route::post('/seed-floor-locations', [IndoorNavigationController::class, 'seedFloorLocations']);
 

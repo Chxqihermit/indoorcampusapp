@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Building;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class BuildingSeeder extends Seeder
 {
@@ -19,7 +19,13 @@ class BuildingSeeder extends Seeder
         ];
 
         foreach ($buildings as $building) {
-            DB::table('buildings')->insert($building);
+            Building::firstOrCreate(
+                ['name' => $building['name']],
+                [
+                    'latitude' => $building['latitude'],
+                    'longitude' => $building['longitude'],
+                ]
+            );
         }
     }
 }

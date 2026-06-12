@@ -3,7 +3,7 @@
   "features": [
     {
       "type": "Feature",
-      "properties": { "id": "lib-001", "name": "D1.Prof Tjama Tjivikua Library", "type": "building" },
+      "properties": { "id": "D1", "name": "D1.Prof Tjama Tjivikua Library", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075346359786835, -22.564414570284825]
@@ -11,7 +11,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "eng-001", "name": " D2:Engineering Building", "type": "building" },
+      "properties": { "id": "D2", "name": " D2:Engineering Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.074554165337275, -22.564940049542116]
@@ -19,7 +19,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "aud-001", "name": "D3:Auditorium", "type": "building" },
+      "properties": { "id": "D3", "name": "D3:Auditorium", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075029085438217, -22.565100706082774]
@@ -27,7 +27,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "stb-001", "name": "D4:Science and Technology Building", "type": "building" },
+      "properties": { "id": "D4", "name": "D4:Science and Technology Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07441025215516, -22.565762690446334]
@@ -35,7 +35,7 @@
     },
      {
       "type": "Feature",
-      "properties": { "id": "has-001", "name": "E2: Mining and Engineering Building", "type": "building" },
+      "properties": { "id": "E2", "name": "E2: Mining and Engineering Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.073325762141593, -22.565779664363262]
@@ -43,7 +43,7 @@
     },
         {
       "type": "Feature",
-      "properties": { "id": "mec-001", "name": "E3: Civil Engineering Building", "type": "building" },
+      "properties": { "id": "E3", "name": "E3: Civil Engineering Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.073236087698465, -22.56589954085443]
@@ -51,15 +51,23 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "mtc-001", "name": "MTC", "type": "building" },
+      "properties": { "id": "E1", "name": "E1:Faculty of Health and Applied Sciences", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.073699512936685, -22.566271907025623]
       }
     },
+        {
+      "type": "Feature",
+      "properties": { "id": "mtc", "name": "MTC", "type": "building" },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [17.073699512936685, -22.565971907025623]
+      } 
+    },
     {
       "type": "Feature",
-      "properties": { "id": "htt-001", "name": "HTTPS", "type": "building" },
+      "properties": { "id": "E4", "name": "HTTPS", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07314807733772, -22.56636809216782]
@@ -75,7 +83,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "ith-001", "name": "IT house", "type": "building" },
+      "properties": { "id": "L1", "name": "IT house", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07755450782318, -22.566999990317896]
@@ -83,7 +91,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "ofb-001", "name": "Office Building", "type": "building" },
+      "properties": { "id": "A17", "name": "A17: Office Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.076773990341735, -22.56542032798143]
@@ -91,7 +99,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "lcb-001", "name": "Lecture Building", "type": "building" },
+      "properties": { "id": "A15", "name": "Lecture Building", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.077756141505773, -22.56514403537021]
@@ -107,7 +115,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "phb-001", "name": "Poly Heights Building", "type": "building" },
+      "properties": { "id": "A18", "name": "Poly Heights", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07805533987255, -22.56618313296599]

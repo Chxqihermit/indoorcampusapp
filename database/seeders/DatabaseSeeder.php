@@ -24,7 +24,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Seed library data
-        $this->call(LibrarySeeder::class);
+        $this->call([
+            BuildingSeeder::class,
+            LibrarySeeder::class,
+            IndoorLocationsSeeder::class,
+            FirstFloorLocationsSeeder::class,
+        ]);
     }
 }
