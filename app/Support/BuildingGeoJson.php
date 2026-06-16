@@ -7,9 +7,6 @@ class BuildingGeoJson
     /** @var array<string, array{name: string, coordinates: array{0: float, 1: float}}>|null */
     private static ?array $index = null;
 
-    /**
-     * @return array<string, array{name: string, coordinates: array{0: float, 1: float}}>
-     */
     public static function index(): array
     {
         if (self::$index !== null) {
@@ -40,9 +37,6 @@ class BuildingGeoJson
         return self::$index = $index;
     }
 
-    /**
-     * @return array{name: string, coordinates: array{0: float, 1: float}}|null
-     */
     public static function lookup(string $buildingId): ?array
     {
         return self::index()[$buildingId] ?? null;

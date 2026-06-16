@@ -39,13 +39,11 @@ class StaffDirectoryController extends Controller
             ->limit(20)
             ->get();
 
-        $results = $staff->map(function (StaffDirectory $member) {
+        return response()->json($staff->map(function (StaffDirectory $member) {
             $geoBuilding = BuildingGeoJson::lookup((string) $member->buildingID);
 
             return [
                 'id' => $member->StaffID,
-                'first_name' => trim((string) $member->firstName),
-                'last_name' => trim((string) $member->lastName),
                 'full_name' => $member->full_name,
                 'staff_position' => $member->staffPosition,
                 'email' => $member->email,
@@ -54,8 +52,6 @@ class StaffDirectoryController extends Controller
                 'room_no' => $member->roomNo,
                 'coordinates' => $geoBuilding['coordinates'] ?? null,
             ];
-        });
-
-        return response()->json($results);
+        }));
     }
 }

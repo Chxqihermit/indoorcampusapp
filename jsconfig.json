@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./resources/js/*"]
+        },
+        "jsx": "react-jsx",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext"
+    },
+    "include": ["resources/js/**/*.js", "resources/js/**/*.jsx"],
+    "exclude": ["node_modules", "vendor", "mobile"]
+}

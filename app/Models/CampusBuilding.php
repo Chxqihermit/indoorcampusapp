@@ -16,8 +16,5 @@ class CampusBuilding extends Model
 
     public $timestamps = false;
 
-    protected $fillable = [
-        'buildingID',
-        'buildingName',
-    ];
+    protected $fillable = ['buildingID', 'buildingName'];
 }
