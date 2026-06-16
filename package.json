@@ -11,7 +11,8 @@
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
-        "types": "tsc --noEmit"
+        "mobile": "cd mobile && npm start",
+        "mobile:install": "cd mobile && npm install"
     },
     "devDependencies": {
         "@capacitor/cli": "^7.6.0",

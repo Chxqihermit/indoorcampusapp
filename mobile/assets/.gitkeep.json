@@ -1,0 +1,6 @@
+{
+  "name": "assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Place icon.png, splash-icon.png, and adaptive-icon.png here before production builds. Expo will use defaults until then."
+}
