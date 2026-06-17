@@ -1,17 +1,23 @@
-# CampusNav React Native App
+# CampusNav Mobile (native Android & iOS)
 
-This folder contains the **React Native (Expo)** mobile client that replaces the old Inertia web UI.
+The official mobile apps are **native** — built with **Expo / React Native** in `mobile/`. They are **not** a Chrome/Safari WebView.
 
-Laravel remains the **API backend** (MySQL via Laragon, staff directory, indoor navigation, WiFi).
+The web dashboard (`resources/js/`) and the mobile app share the **same Laravel API** and campus data, but mobile uses native maps, native GPS, and native UI.
+
+> **Note:** The repo also has an optional Capacitor WebView wrapper at the project root. That is a separate, website-in-a-shell approach. Use **`mobile/`** for a true native app.
+
+---
 
 ## Prerequisites
 
 - Node.js 20+
 - Laragon with MySQL running
-- Android Studio (emulator) and/or Xcode (iOS simulator)
-- Expo Go app (for quick testing) or a dev build
+- **Android:** Android Studio (emulator) or Expo Go on a device
+- **iOS:** Mac with Xcode or Expo Go on iPhone
 
-## 1. Backend setup (one time)
+---
+
+## 1. Backend
 
 From the project root:
 
@@ -22,28 +28,28 @@ php artisan db:seed
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-Mobile API auth uses built-in bearer tokens (no Sanctum package required).
+`--host=0.0.0.0` lets phones and emulators reach the API.
 
-`--host=0.0.0.0` lets physical devices on your LAN reach the API.
+---
 
-## 2. Mobile setup
+## 2. Mobile app
 
 ```powershell
 cd mobile
 npm install
 ```
 
-Create a `.env` file in `mobile/`:
+Create `mobile/.env`:
 
 ```env
-# Android emulator
+# Android emulator → host machine
 EXPO_PUBLIC_API_URL=http://10.0.2.2:8000
 
-# iOS simulator
-# EXPO_PUBLIC_API_URL=http://127.0.0.1:8000
-
-# Physical phone (use your PC's LAN IP)
+# Physical phone (same Wi-Fi, your PC IP from ipconfig):
 # EXPO_PUBLIC_API_URL=http://192.168.1.50:8000
+
+# iOS simulator on Mac:
+# EXPO_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
 Start Expo:
@@ -52,46 +58,66 @@ Start Expo:
 npx expo start
 ```
 
-Press `a` for Android emulator or scan the QR code with Expo Go on your phone.
+- Press **`a`** — Android emulator  
+- Press **`i`** — iOS simulator (Mac)  
+- Or scan QR with **Expo Go** on your phone  
 
-## 3. Default login
+### Default login
 
-If you ran `php artisan db:seed`:
+- Email: `test@example.com`  
+- Password: `password`  
 
-- Email: `test@example.com`
-- Password: `password`
+---
 
-## App features
+## Native features (parity with web)
 
-| Tab | Feature |
-|-----|---------|
-| **Map** | Campus map, staff/building search, GPS route line to destination |
-| **Indoor** | Building/floor picker, indoor pathfinding |
-| **WiFi** | WiFi scan + access point list via API |
-| **Profile** | Account info, sign out |
+| Feature | Status |
+|---------|--------|
+| Staff / building search (All · Staff · Buildings) | ✓ |
+| Walkway routing (not straight line) | ✓ |
+| GPS route line shortens as you walk | ✓ |
+| Indoor path API | ✓ |
+| Indoor floor plan SVG (web has full viewer) | List + text route (floor plan UI planned) |
+| MapLibre 3D buildings | Uses `react-native-maps` instead |
+| Fortify web settings / 2FA | Web only |
 
-Search scopes on the map: **All · Staff · Buildings**
+---
 
-## API endpoints used
+## Publishing to stores (Expo EAS)
 
-- `POST /api/auth/login`, `/api/auth/register`, `/api/auth/logout`
-- `GET /api/staff/search?q=`
-- `GET /api/campus-buildings/search?q=`
-- `GET /api/geojson/{name}`
-- `GET /api/buildings`, `/api/floor/{id}/locations`, `/api/path/{start}/{end}`
-- `GET /api/scan-wifi-networks`, `/api/floor/{id}/wifi-access-points`
+Expo does **not** block Play Store or App Store publishing:
 
-## Web + mobile
+```powershell
+npm install -g eas-cli
+eas login
+eas build:configure
+eas build --platform android
+eas build --platform ios
+```
 
-This project supports **both**:
+Configure `app.json` icons in `mobile/assets/` before release builds.
 
-- **Web map** — log in and open `/dashboard` (Inertia + Vite)
-- **Mobile app** — React Native client in `mobile/` (Expo)
+Production API URL: set `EXPO_PUBLIC_API_URL` to your hosted Laravel server at build time.
 
-Both use the same Laravel API (`/api/*`).
+---
 
-## Notes
+## API endpoints
 
-- **WiFi scanning on device** may need a native module (Expo Go has limits). The screen calls your Laravel WiFi API; extend with `react-native-wifi-reborn` for on-device scans if needed.
-- **Outdoor routing** on the map is a straight line to destination for now. Full walkway routing can be ported from the web `MapComponent` later.
-- Add app icons to `mobile/assets/` (`icon.png`, `splash-icon.png`, `adaptive-icon.png`) before store builds.
+Same as web — see root `README.md`. Mobile uses `/api/auth/*` with bearer tokens.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Network request failed | Check `EXPO_PUBLIC_API_URL`; restart Expo after `.env` changes |
+| Emulator can't reach API | Use `http://10.0.2.2:8000` |
+| Phone can't reach API | Use PC LAN IP; `php artisan serve --host=0.0.0.0`; check firewall |
+| No walkway route | Ensure `public/data/nust-walkways.geojson` exists; destination near paths |
+
+---
+
+## Optional: Capacitor WebView (not recommended for native UX)
+
+If you ever want the **website** inside a WebView instead, see `capacitor.config.ts` and run `npm run cap:android` from the project root. That is **not** this native app.

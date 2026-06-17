@@ -12,7 +12,10 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "mobile": "cd mobile && npm start",
-        "mobile:install": "cd mobile && npm install"
+        "mobile:install": "cd mobile && npm install",
+        "cap:sync": "npm run build && npx cap sync",
+        "cap:android": "npx cap open android",
+        "cap:ios": "npx cap open ios"
     },
     "devDependencies": {
         "@capacitor/cli": "^7.6.0",

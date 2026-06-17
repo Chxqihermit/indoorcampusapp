@@ -404,4 +404,23 @@
     .map-set-btn-end {
         @apply bg-blue-600 hover:bg-blue-700;
     }
+
+    /* Capacitor native shell (Android / iOS) — same web app in a WebView */
+    html.capacitor-native body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    html.capacitor-native .map-header,
+    html.capacitor-native header.fixed.top-0 {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    html.capacitor-native .campus-search-container {
+        top: calc(4rem + env(safe-area-inset-top) + 0.75rem);
+    }
+
+    html.capacitor-native .maplibregl-ctrl-top-right {
+        top: calc(1rem + env(safe-area-inset-top));
+    }
 }

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { knownLocations } from "./knownLocations";
 import MapCoordinateDebug from "./MapCoordinateDebug";
+import { geolocationAllowed } from "@/lib/capacitor";
 import maplibregl, { Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 const COORD_DEBUG_KEY = "campusnav-coord-debug";
@@ -22,6 +23,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
   const gpsBtnRef = useRef(null);
   const walkApiRef = useRef(null);
   const coordDebugEnabledRef = useRef(false);
+  const setRouteActiveRef = useRef(null);
   const [routeActive, setRouteActive] = useState(false);
   const [coordDebugEnabled, setCoordDebugEnabled] = useState(
     () => localStorage.getItem(COORD_DEBUG_KEY) === "true"
@@ -39,6 +41,9 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
   useEffect(() => {
     coordDebugEnabledRef.current = coordDebugEnabled;
   }, [coordDebugEnabled]);
+  useEffect(() => {
+    setRouteActiveRef.current = setRouteActive;
+  }, []);
   useEffect(() => {
     if (map.current) return;
     if (mapContainer.current) {
@@ -148,13 +153,6 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
         visualizePitch: true
       });
       map.current.addControl(nav, "top-right");
-      const geolocate = new maplibregl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true
-        },
-        trackUserLocation: true
-      });
-      map.current.addControl(geolocate, "top-right");
       map.current.addControl(new maplibregl.FullscreenControl(), "top-right");
       map.current.on("load", () => {
         console.log("Map loaded and ready");
@@ -415,12 +413,18 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
         } catch {
         }
         try {
+          const emptyMarkers = { type: "FeatureCollection", features: [] };
           fetch("/data/nust-buildings.geojson").then((r) => r.ok ? r.json() : Promise.reject(new Error("buildings 404"))).then((buildings) => {
             try {
-              if (!map.current.getSource("nust-buildings-markers")) {
-                map.current.addSource("nust-buildings-markers", { type: "geojson", data: buildings });
+              if (!map.current.getSource("nust-buildings-names")) {
+                map.current.addSource("nust-buildings-names", { type: "geojson", data: buildings });
               } else {
-                map.current.getSource("nust-buildings-markers").setData(buildings);
+                map.current.getSource("nust-buildings-names").setData(buildings);
+              }
+              if (!map.current.getSource("nust-buildings-markers")) {
+                map.current.addSource("nust-buildings-markers", { type: "geojson", data: emptyMarkers });
+              } else {
+                map.current.getSource("nust-buildings-markers").setData(emptyMarkers);
               }
               if (!map.current.getLayer("nust-buildings-circles")) {
                 map.current.addLayer({
@@ -428,25 +432,18 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                   type: "circle",
                   source: "nust-buildings-markers",
                   paint: {
-                    "circle-radius": [
-                      "case",
-                      ["==", ["get", "type"], "gate"],
-                      9,
-                      ["==", ["get", "type"], "amenity"],
-                      6,
-                      7
-                    ],
+                    "circle-radius": 8,
                     "circle-color": [
                       "case",
-                      ["==", ["get", "type"], "gate"],
+                      ["==", ["get", "role"], "start"],
+                      "#10B981",
+                      ["==", ["get", "role"], "end"],
                       "#EF4444",
-                      ["==", ["get", "type"], "amenity"],
-                      "#F59E0B",
                       "#2563EB"
                     ],
                     "circle-stroke-color": "#ffffff",
                     "circle-stroke-width": 2,
-                    "circle-opacity": 0.9
+                    "circle-opacity": 0.95
                   }
                 });
               }
@@ -454,11 +451,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                 map.current.addLayer({
                   id: "nust-buildings-text",
                   type: "symbol",
-                  source: "nust-buildings-markers",
+                  source: "nust-buildings-names",
                   layout: {
                     "text-field": ["get", "name"],
+                    "text-font": ["Open Sans Bold"],
                     "text-size": 11,
-                    "text-offset": [0, 1.2],
+                    "text-offset": [0, 0.6],
                     "text-anchor": "top",
                     "text-optional": true,
                     "text-allow-overlap": false
@@ -467,6 +465,31 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                     "text-color": "#111827",
                     "text-halo-color": "#ffffff",
                     "text-halo-width": 1.5
+                  }
+                });
+              }
+              if (!map.current.getLayer("nust-waypoint-labels")) {
+                map.current.addLayer({
+                  id: "nust-waypoint-labels",
+                  type: "symbol",
+                  source: "nust-buildings-markers",
+                  layout: {
+                    "text-field": ["get", "name"],
+                    "text-size": 12,
+                    "text-offset": [0, 1.4],
+                    "text-anchor": "top",
+                    "text-optional": true,
+                    "text-allow-overlap": true
+                  },
+                  paint: {
+                    "text-color": [
+                      "case",
+                      ["==", ["get", "role"], "start"],
+                      "#047857",
+                      "#DC2626"
+                    ],
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 2
                   }
                 });
               }
@@ -536,6 +559,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           let endPt = null;
           let startLabel = "";
           let endLabel = "";
+          let fullRouteCoords = null;
+          let routeProgressIndex = 0;
+          let gpsWatchId = null;
+          let lastKnownUserPos = null;
+          let lastTrimPos = null;
+          let routeTrackingActive = false;
           const graph = { nodes: {} };
           let graphReady = false;
           const hav = (a, b) => {
@@ -547,6 +576,36 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             const la2 = toRad(b[1]);
             const s = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
             return 2 * R * Math.asin(Math.sqrt(s));
+          };
+          const routeMeters = (coords) => coords.reduce((sum, c, i) => i ? sum + hav(coords[i - 1], c) : 0, 0);
+          const projectPointOnSegment = (px, py, ax, ay, bx, by) => {
+            const mPerDegLat = 111320;
+            const mPerDegLng = Math.cos(py * Math.PI / 180) * 111320;
+            const P = { x: px * mPerDegLng, y: py * mPerDegLat };
+            const A = { x: ax * mPerDegLng, y: ay * mPerDegLat };
+            const B = { x: bx * mPerDegLng, y: by * mPerDegLat };
+            const ABx = B.x - A.x;
+            const ABy = B.y - A.y;
+            const APx = P.x - A.x;
+            const APy = P.y - A.y;
+            const ab2 = ABx * ABx + ABy * ABy;
+            if (!ab2) {
+              const dx = P.x - A.x;
+              const dy = P.y - A.y;
+              return { lng: ax, lat: ay, t: 0, distM: Math.sqrt(dx * dx + dy * dy) };
+            }
+            let t = (APx * ABx + APy * ABy) / ab2;
+            t = Math.max(0, Math.min(1, t));
+            const Qx = A.x + t * ABx;
+            const Qy = A.y + t * ABy;
+            const dx = P.x - Qx;
+            const dy = P.y - Qy;
+            return {
+              lng: Qx / mPerDegLng,
+              lat: Qy / mPerDegLat,
+              t,
+              distM: Math.sqrt(dx * dx + dy * dy)
+            };
           };
           const nid = (lng, lat) => `${lng.toFixed(6)},${lat.toFixed(6)}`;
           const ensureNode = (lng, lat) => {
@@ -978,6 +1037,53 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               }
             }
           };
+          const ensureUserLocationLayer = () => {
+            if (!map.current.getSource("user-location")) {
+              map.current.addSource("user-location", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+            }
+            if (!map.current.getLayer("user-location-dot")) {
+              map.current.addLayer({
+                id: "user-location-dot",
+                type: "circle",
+                source: "user-location",
+                paint: {
+                  "circle-radius": 9,
+                  "circle-color": "#4285F4",
+                  "circle-stroke-color": "#ffffff",
+                  "circle-stroke-width": 3,
+                  "circle-opacity": 1
+                }
+              });
+              try {
+                map.current.moveLayer("user-location-dot");
+              } catch {
+              }
+            }
+          };
+          const updateUserLocationDot = (lng, lat) => {
+            if (!map.current) return;
+            ensureUserLocationLayer();
+            map.current.getSource("user-location").setData({
+              type: "FeatureCollection",
+              features: [{
+                type: "Feature",
+                properties: {},
+                geometry: { type: "Point", coordinates: [lng, lat] }
+              }]
+            });
+            if (map.current.getLayer("user-location-dot")) {
+              map.current.setLayoutProperty("user-location-dot", "visibility", "visible");
+            }
+          };
+          const hideUserLocationDot = () => {
+            if (!map.current) return;
+            if (map.current.getSource("user-location")) {
+              map.current.getSource("user-location").setData({ type: "FeatureCollection", features: [] });
+            }
+            if (map.current.getLayer("user-location-dot")) {
+              map.current.setLayoutProperty("user-location-dot", "visibility", "none");
+            }
+          };
           const removeDebugLayers = () => {
             try {
               if (map.current.getLayer("walk-snap-points")) map.current.removeLayer("walk-snap-points");
@@ -990,6 +1096,150 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           const notifyRouteState = () => {
             onRouteStateChange?.({ start: startLabel, end: endLabel });
           };
+          const syncHighlightedBuildingMarkers = () => {
+            if (!map.current?.getSource("nust-buildings-markers")) return;
+            const features = [];
+            if (startPt) {
+              features.push({
+                type: "Feature",
+                properties: { name: startLabel || "Start", role: "start" },
+                geometry: { type: "Point", coordinates: startPt }
+              });
+            }
+            if (endPt) {
+              features.push({
+                type: "Feature",
+                properties: { name: endLabel || "Destination", role: "end" },
+                geometry: { type: "Point", coordinates: endPt }
+              });
+            }
+            map.current.getSource("nust-buildings-markers").setData({
+              type: "FeatureCollection",
+              features
+            });
+          };
+          const renderRouteLine = (coords) => {
+            if (!map.current?.getSource("walk-route") || !coords?.length) return;
+            map.current.getSource("walk-route").setData({
+              type: "FeatureCollection",
+              features: [{
+                type: "Feature",
+                properties: {},
+                geometry: { type: "LineString", coordinates: coords }
+              }]
+            });
+          };
+          const showRoutePopup = (coords, { arrived = false } = {}) => {
+            const midpoint = coords[Math.floor(coords.length / 2)] || coords[0] || endPt;
+            if (!midpoint) return;
+            const meters = routeMeters(coords);
+            const minutes = Math.max(1, Math.round(meters / 1.4 / 60));
+            if (routePopup) {
+              try {
+                routePopup.remove();
+              } catch {
+              }
+              routePopup = null;
+            }
+            const distanceLabel = meters < 1e3 ? `${Math.round(meters)} m` : `${(meters / 1e3).toFixed(2)} km`;
+            const html = arrived ? `<div style="padding:8px;color:#111827"><strong style="color:#111827">You have arrived</strong></div>` : `<div style="padding:8px;color:#111827"><strong style="color:#111827">Walking route</strong><br/>Remaining: ${distanceLabel}<br/>~${minutes} min left</div>`;
+            routePopup = new maplibregl.Popup().setLngLat(midpoint).setHTML(html).addTo(map.current);
+          };
+          const stopRouteTracking = () => {
+            lastTrimPos = null;
+            routeTrackingActive = false;
+            setRouteActiveRef.current?.(false);
+          };
+          const stopContinuousGps = () => {
+            if (gpsWatchId !== null && navigator.geolocation) {
+              navigator.geolocation.clearWatch(gpsWatchId);
+              gpsWatchId = null;
+            }
+            hideUserLocationDot();
+          };
+          const trimRouteToUserPosition = (lng, lat, accuracy = 25) => {
+            if (!fullRouteCoords || fullRouteCoords.length < 2) return;
+            if (!routeTrackingActive) return;
+            if (lastTrimPos && hav([lng, lat], lastTrimPos) < 3) return;
+            const snapThreshold = Math.max(30, (accuracy || 25) * 1.5);
+            let bestSeg = -1;
+            let bestDist = Infinity;
+            let bestProj = null;
+            for (let i = Math.max(0, routeProgressIndex); i < fullRouteCoords.length - 1; i++) {
+              const [ax, ay] = fullRouteCoords[i];
+              const [bx, by] = fullRouteCoords[i + 1];
+              const proj = projectPointOnSegment(lng, lat, ax, ay, bx, by);
+              if (proj.distM < bestDist) {
+                bestDist = proj.distM;
+                bestSeg = i;
+                bestProj = proj;
+              }
+            }
+            const dest = fullRouteCoords[fullRouteCoords.length - 1];
+            if (hav([lng, lat], dest) < 15) {
+              updateUserLocationDot(lng, lat);
+              renderRouteLine([dest]);
+              showRoutePopup([dest], { arrived: true });
+              routeTrackingActive = false;
+              lastTrimPos = [lng, lat];
+              setRouteActiveRef.current?.(false);
+              return;
+            }
+            if (bestSeg < 0 || bestDist > snapThreshold) return;
+            const passedVertex = bestProj.t >= 0.5 ? bestSeg + 1 : bestSeg;
+            if (passedVertex > routeProgressIndex) {
+              routeProgressIndex = passedVertex;
+            }
+            const routePoint = [bestProj.lng, bestProj.lat];
+            const remaining = [routePoint];
+            for (let j = routeProgressIndex + 1; j < fullRouteCoords.length; j++) {
+              remaining.push(fullRouteCoords[j]);
+            }
+            if (remaining.length < 2) {
+              updateUserLocationDot(lng, lat);
+              renderRouteLine([dest]);
+              showRoutePopup([dest], { arrived: true });
+              routeTrackingActive = false;
+              setRouteActiveRef.current?.(false);
+            } else {
+              renderRouteLine(remaining);
+              showRoutePopup(remaining);
+            }
+            lastTrimPos = [lng, lat];
+          };
+          const handleGpsUpdate = (pos) => {
+            const lng = pos.coords.longitude;
+            const lat = pos.coords.latitude;
+            const accuracy = pos.coords.accuracy;
+            lastKnownUserPos = { lng, lat, accuracy };
+            updateUserLocationDot(lng, lat);
+            trimRouteToUserPosition(lng, lat, accuracy);
+          };
+          const startContinuousGps = () => {
+            if (!navigator.geolocation || !geolocationAllowed()) return;
+            if (gpsWatchId !== null) return;
+            const watchOpts = { enableHighAccuracy: true, maximumAge: 1e3, timeout: 15e3 };
+            navigator.geolocation.getCurrentPosition(
+              handleGpsUpdate,
+              (err) => console.warn("GPS error:", err.message),
+              watchOpts
+            );
+            gpsWatchId = navigator.geolocation.watchPosition(
+              handleGpsUpdate,
+              (err) => console.warn("GPS error:", err.message),
+              watchOpts
+            );
+          };
+          const startRouteTracking = () => {
+            if (!fullRouteCoords?.length) return;
+            lastTrimPos = null;
+            routeTrackingActive = true;
+            setRouteActiveRef.current?.(true);
+            if (lastKnownUserPos) {
+              const { lng, lat, accuracy } = lastKnownUserPos;
+              trimRouteToUserPosition(lng, lat, accuracy);
+            }
+          };
           const setPoint = (which, lng, lat, label) => {
             const feature = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [lng, lat] } };
             if (which === "start") {
@@ -1001,6 +1251,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               if (label !== void 0) endLabel = label;
               map.current.getSource("walk-end")?.setData?.({ type: "FeatureCollection", features: [feature] });
             }
+            syncHighlightedBuildingMarkers();
             notifyRouteState();
           };
           const tryComputeRoute = async () => {
@@ -1048,10 +1299,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               return [n.lng, n.lat];
             });
             console.log("A* path length:", coords.length);
-            const meters = coords.reduce((sum, c, i) => i ? sum + hav(coords[i - 1], c) : 0, 0);
-            map.current.getSource("walk-route").setData({ type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } }] });
-            const minutes = Math.round(meters / 1.4 / 60);
-            routePopup = new maplibregl.Popup().setLngLat([(startPt[0] + endPt[0]) / 2, (startPt[1] + endPt[1]) / 2]).setHTML(`<div style="padding:8px;color:#111827"><strong style="color:#111827">Walking route (A*)</strong><br/>Distance: ${(meters / 1e3).toFixed(2)} km<br/>Duration: ~${minutes} min</div>`).addTo(map.current);
+            fullRouteCoords = coords;
+            routeProgressIndex = 0;
+            lastTrimPos = null;
+            renderRouteLine(coords);
+            showRoutePopup(coords);
+            startRouteTracking();
             try {
               sVirt.cleanup();
               eVirt.cleanup();
@@ -1070,6 +1323,9 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             }
           };
           const clearWalk = () => {
+            stopRouteTracking();
+            fullRouteCoords = null;
+            routeProgressIndex = 0;
             startPt = null;
             endPt = null;
             startLabel = "";
@@ -1077,6 +1333,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             if (map.current.getSource("walk-start")) map.current.getSource("walk-start").setData({ type: "FeatureCollection", features: [] });
             if (map.current.getSource("walk-end")) map.current.getSource("walk-end").setData({ type: "FeatureCollection", features: [] });
             if (map.current.getSource("walk-route")) map.current.getSource("walk-route").setData({ type: "FeatureCollection", features: [] });
+            syncHighlightedBuildingMarkers();
             removeDebugLayers();
             if (routePopup) {
               try {
@@ -1173,9 +1430,18 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               alert("Geolocation is not supported by your browser.");
               return;
             }
-            const isSecure = window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+            const isSecure = geolocationAllowed();
             if (!isSecure) {
               alert("Geolocation requires HTTPS or localhost.");
+              return;
+            }
+            startContinuousGps();
+            if (lastKnownUserPos) {
+              const { lng, lat, accuracy } = lastKnownUserPos;
+              const label = `My Location (\xB1${Math.round(accuracy)}m)`;
+              setPoint("start", lng, lat, label);
+              map.current?.flyTo({ center: [lng, lat], zoom: 18, duration: 1e3 });
+              tryComputeRoute();
               return;
             }
             navigator.geolocation.getCurrentPosition(
@@ -1210,6 +1476,11 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           if (!map.current.getLayer("walk-start")) map.current.addLayer({ id: "walk-start", type: "circle", source: "walk-start", paint: { "circle-radius": 7, "circle-color": "#10B981", "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
           if (!map.current.getSource("walk-end")) map.current.addSource("walk-end", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
           if (!map.current.getLayer("walk-end")) map.current.addLayer({ id: "walk-end", type: "circle", source: "walk-end", paint: { "circle-radius": 7, "circle-color": "#EF4444", "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
+          try {
+            if (map.current.getLayer("walk-start")) map.current.setLayoutProperty("walk-start", "visibility", "none");
+            if (map.current.getLayer("walk-end")) map.current.setLayoutProperty("walk-end", "visibility", "none");
+          } catch {
+          }
           walkApiRef.current = {
             setPoint: (which, lng, lat, label) => {
               setPoint(which, lng, lat, label);
@@ -1218,6 +1489,8 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             clearWalk,
             tryComputeRoute,
             geocodeAndSet,
+            stopRouteTracking,
+            stopContinuousGps,
             setSelecting: (mode) => {
               selecting = mode;
             },
@@ -1230,6 +1503,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           gpsBtnRef.current = gpsBtn;
           gpsBtn.onclick = () => triggerGps();
           document.body.appendChild(gpsBtn);
+          startContinuousGps();
           map.current.on("click", async (e) => {
             if (!selecting) return;
             const { lng, lat } = e.lngLat;
@@ -1373,6 +1647,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             source: "nust-buildings",
             layout: {
               "text-field": ["get", "name"],
+              "text-font": ["Open Sans Bold"],
               "text-size": 12,
               "text-anchor": "top",
               "text-offset": [0, 1.5],
@@ -1532,6 +1807,8 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
       });
     }
     return () => {
+      walkApiRef.current?.stopContinuousGps?.();
+      walkApiRef.current?.stopRouteTracking?.();
       if (keyHandlerRef.current) {
         window.removeEventListener("keydown", keyHandlerRef.current);
         keyHandlerRef.current = null;
