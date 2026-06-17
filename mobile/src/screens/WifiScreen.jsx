@@ -8,6 +8,7 @@ import {
   View
 } from "react-native";
 import { getWifiAccessPoints, scanWifiNetworks } from "@/api/campus";
+import { BRAND_BLUE } from "@/constants/colors";
 function WifiScreen() {
   const [networks, setNetworks] = useState([]);
   const [accessPoints, setAccessPoints] = useState([]);
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
   title: { fontSize: 22, fontWeight: "700", marginBottom: 8 },
   note: { color: "#6b7280", marginBottom: 16, lineHeight: 20 },
-  btn: { backgroundColor: "#2563eb", borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 8 },
+  btn: { backgroundColor: BRAND_BLUE, borderRadius: 12, padding: 14, alignItems: "center", marginBottom: 8 },
   btnSecondary: { backgroundColor: "#111827" },
   btnText: { color: "#fff", fontWeight: "600" },
   section: { marginTop: 16, marginBottom: 8, fontWeight: "600" },

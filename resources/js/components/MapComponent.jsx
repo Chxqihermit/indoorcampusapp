@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { knownLocations } from "./knownLocations";
 import MapCoordinateDebug from "./MapCoordinateDebug";
+import StaffDetailCard from "./StaffDetailCard";
 import { geolocationAllowed } from "@/lib/capacitor";
 import maplibregl, { Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -29,6 +30,11 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     () => localStorage.getItem(COORD_DEBUG_KEY) === "true"
   );
   const [hoverCoords, setHoverCoords] = useState(null);
+  const [staffCard, setStaffCard] = useState(null);
+  const [mobileSheet, setMobileSheet] = useState(false);
+  const mobileSheetRef = useRef(false);
+  const setStaffCardRef = useRef(setStaffCard);
+  const staffCardApiRef = useRef({});
   const toggleCoordDebug = useCallback(() => {
     setCoordDebugEnabled((prev) => {
       const next = !prev;
@@ -37,6 +43,64 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
       if (!next) setHoverCoords(null);
       return next;
     });
+  }, []);
+  useEffect(() => {
+    setStaffCardRef.current = setStaffCard;
+  }, []);
+  useEffect(() => {
+    mobileSheetRef.current = mobileSheet;
+  }, [mobileSheet]);
+  useEffect(() => {
+    const updateMobileSheet = () => {
+      setMobileSheet(
+        window.matchMedia("(max-width: 768px)").matches
+        || document.documentElement.classList.contains("capacitor-native")
+      );
+    };
+    updateMobileSheet();
+    const mq = window.matchMedia("(max-width: 768px)");
+    mq.addEventListener("change", updateMobileSheet);
+    return () => mq.removeEventListener("change", updateMobileSheet);
+  }, []);
+  useEffect(() => {
+    const staffFromMeta = (meta, coords) => ({
+      staffId: meta.staffId ?? meta.id,
+      name: meta.name,
+      staffPosition: meta.staffPosition ?? "",
+      email: meta.email ?? "",
+      buildingName: meta.buildingName ?? "",
+      roomNo: meta.roomNo ?? "",
+      subtitle: meta.subtitle ?? "",
+      coordinates: coords
+    });
+    const staffFromProps = (props, coords) => ({
+      staffId: props.staffId,
+      name: props.staffName || props.name || "Staff member",
+      staffPosition: props.staffPosition || "",
+      email: props.staffEmail || "",
+      buildingName: props.staffBuilding || "",
+      roomNo: props.staffRoom || "",
+      subtitle: props.staffSubtitle || "",
+      coordinates: coords
+    });
+    staffCardApiRef.current = {
+      showFromMeta(meta, coords, collapsed = false) {
+        if (!meta || meta.type !== "staff") return;
+        setStaffCardRef.current({ staff: staffFromMeta(meta, coords), collapsed });
+      },
+      showFromProps(props, coords, collapsed = false) {
+        setStaffCardRef.current({ staff: staffFromProps(props, coords), collapsed });
+      },
+      collapse() {
+        setStaffCardRef.current((prev) => prev ? { ...prev, collapsed: true } : null);
+      },
+      expand() {
+        setStaffCardRef.current((prev) => prev ? { ...prev, collapsed: false } : null);
+      },
+      dismiss() {
+        setStaffCardRef.current(null);
+      }
+    };
   }, []);
   useEffect(() => {
     coordDebugEnabledRef.current = coordDebugEnabled;
@@ -204,7 +268,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                 type: "fill",
                 source: "nust-lower-campus",
                 paint: {
-                  "fill-color": "#3B82F6",
+                  "fill-color": "#2A427D",
                   "fill-opacity": 0.06
                 }
               });
@@ -215,7 +279,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                 type: "line",
                 source: "nust-lower-campus",
                 paint: {
-                  "line-color": "#2563EB",
+                  "line-color": "#1B2C5D",
                   "line-width": 8,
                   "line-opacity": 0.2,
                   "line-blur": 2
@@ -439,7 +503,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                       "#10B981",
                       ["==", ["get", "role"], "end"],
                       "#EF4444",
-                      "#2563EB"
+                      "#1B2C5D"
                     ],
                     "circle-stroke-color": "#ffffff",
                     "circle-stroke-width": 2,
@@ -496,6 +560,11 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               map.current.on("click", "nust-buildings-circles", (e) => {
                 if (!e.features?.[0]) return;
                 const props = e.features[0].properties;
+                const coords = e.features[0].geometry?.coordinates;
+                if (props?.role === "end" && props?.isStaff === "1") {
+                  staffCardApiRef.current.showFromProps(props, coords, false);
+                  return;
+                }
                 new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<div style="padding:8px;color:#111827"><strong style="color:#111827">${props?.name || "Building"}</strong></div>`).addTo(map.current);
               });
               map.current.on("mouseenter", "nust-buildings-circles", () => {
@@ -559,6 +628,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           let endPt = null;
           let startLabel = "";
           let endLabel = "";
+          let endStaffMeta = null;
           let fullRouteCoords = null;
           let routeProgressIndex = 0;
           let gpsWatchId = null;
@@ -1030,7 +1100,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               map.current.addSource("walk-route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
             }
             if (!map.current.getLayer("walk-route")) {
-              map.current.addLayer({ id: "walk-route", type: "line", source: "walk-route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#2563EB", "line-width": 5, "line-opacity": 0.95 } });
+              map.current.addLayer({ id: "walk-route", type: "line", source: "walk-route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#1B2C5D", "line-width": 5, "line-opacity": 0.95 } });
               try {
                 map.current.moveLayer("walk-route");
               } catch {
@@ -1048,7 +1118,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                 source: "user-location",
                 paint: {
                   "circle-radius": 9,
-                  "circle-color": "#4285F4",
+                  "circle-color": "#2A427D",
                   "circle-stroke-color": "#ffffff",
                   "circle-stroke-width": 3,
                   "circle-opacity": 1
@@ -1107,9 +1177,19 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               });
             }
             if (endPt) {
+              const staffProps = endStaffMeta ? {
+                isStaff: "1",
+                staffId: String(endStaffMeta.staffId ?? endStaffMeta.id ?? ""),
+                staffName: endStaffMeta.name ?? endLabel,
+                staffPosition: endStaffMeta.staffPosition ?? "",
+                staffEmail: endStaffMeta.email ?? "",
+                staffBuilding: endStaffMeta.buildingName ?? "",
+                staffRoom: endStaffMeta.roomNo ? String(endStaffMeta.roomNo) : "",
+                staffSubtitle: endStaffMeta.subtitle ?? ""
+              } : { isStaff: "0" };
               features.push({
                 type: "Feature",
-                properties: { name: endLabel || "Destination", role: "end" },
+                properties: { name: endLabel || "Destination", role: "end", ...staffProps },
                 geometry: { type: "Point", coordinates: endPt }
               });
             }
@@ -1240,7 +1320,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
               trimRouteToUserPosition(lng, lat, accuracy);
             }
           };
-          const setPoint = (which, lng, lat, label) => {
+          const setPoint = (which, lng, lat, label, staffMeta) => {
             const feature = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [lng, lat] } };
             if (which === "start") {
               startPt = [lng, lat];
@@ -1249,6 +1329,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             } else {
               endPt = [lng, lat];
               if (label !== void 0) endLabel = label;
+              endStaffMeta = staffMeta?.type === "staff" ? staffMeta : null;
+              if (endStaffMeta) {
+                staffCardApiRef.current.showFromMeta(endStaffMeta, [lng, lat], false);
+              } else {
+                staffCardApiRef.current.dismiss();
+              }
               map.current.getSource("walk-end")?.setData?.({ type: "FeatureCollection", features: [feature] });
             }
             syncHighlightedBuildingMarkers();
@@ -1330,6 +1416,8 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             endPt = null;
             startLabel = "";
             endLabel = "";
+            endStaffMeta = null;
+            staffCardApiRef.current.dismiss();
             if (map.current.getSource("walk-start")) map.current.getSource("walk-start").setData({ type: "FeatureCollection", features: [] });
             if (map.current.getSource("walk-end")) map.current.getSource("walk-end").setData({ type: "FeatureCollection", features: [] });
             if (map.current.getSource("walk-route")) map.current.getSource("walk-route").setData({ type: "FeatureCollection", features: [] });
@@ -1482,8 +1570,8 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           } catch {
           }
           walkApiRef.current = {
-            setPoint: (which, lng, lat, label) => {
-              setPoint(which, lng, lat, label);
+            setPoint: (which, lng, lat, label, staffMeta) => {
+              setPoint(which, lng, lat, label, staffMeta);
               tryComputeRoute();
             },
             clearWalk,
@@ -1504,6 +1592,23 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           gpsBtn.onclick = () => triggerGps();
           document.body.appendChild(gpsBtn);
           startContinuousGps();
+          map.current.on("click", (e) => {
+            const hitMarker = map.current.queryRenderedFeatures(e.point, { layers: ["nust-buildings-circles"] });
+            if (!hitMarker.length) {
+              if (mobileSheetRef.current) {
+                staffCardApiRef.current.collapse();
+              }
+              return;
+            }
+            const props = hitMarker[0].properties;
+            if (props?.role === "end" && props?.isStaff === "1") {
+              staffCardApiRef.current.showFromProps(
+                props,
+                hitMarker[0].geometry?.coordinates,
+                false
+              );
+            }
+          });
           map.current.on("click", async (e) => {
             if (!selecting) return;
             const { lng, lat } = e.lngLat;
@@ -1837,8 +1942,8 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     setStart: (lng, lat, label) => {
       walkApiRef.current?.setPoint("start", lng, lat, label);
     },
-    setEnd: (lng, lat, label) => {
-      walkApiRef.current?.setPoint("end", lng, lat, label);
+    setEnd: (lng, lat, label, staffMeta) => {
+      walkApiRef.current?.setPoint("end", lng, lat, label, staffMeta);
     },
     flyTo: (lng, lat, zoom = 18) => {
       map.current?.flyTo({ center: [lng, lat], zoom, duration: 800 });
@@ -1864,6 +1969,22 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     onToggle={toggleCoordDebug}
     coords={hoverCoords}
   />
+            {staffCard && <StaffDetailCard
+    staff={staffCard.staff}
+    collapsed={staffCard.collapsed}
+    sheet={mobileSheet}
+    onClose={() => staffCardApiRef.current.dismiss()}
+    onToggle={() => {
+      if (staffCard.collapsed) {
+        staffCardApiRef.current.expand();
+      } else if (mobileSheet) {
+        staffCardApiRef.current.collapse();
+      }
+    }}
+    onDirections={() => {
+      gpsBtnRef.current?.click();
+    }}
+  />}
         </div>;
 });
 MapComponent.displayName = "MapComponent";

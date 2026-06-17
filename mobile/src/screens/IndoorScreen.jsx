@@ -14,6 +14,7 @@ import {
   getFloorLocations,
   getFloors
 } from "@/api/campus";
+import { BRAND_BLUE } from "@/constants/colors";
 function IndoorScreen() {
   const route = useRoute();
   const highlightLocationId = route.params?.locationId;
@@ -75,7 +76,7 @@ function IndoorScreen() {
   };
   if (loading) {
     return <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={BRAND_BLUE} />
       </View>;
   }
   return <View style={styles.container}>
@@ -160,11 +161,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   locationName: { fontSize: 14, fontWeight: "500" },
-  locationHighlight: { color: "#2563eb" },
+  locationHighlight: { color: BRAND_BLUE },
   locationMeta: { fontSize: 12, color: "#6b7280" },
   routeBtn: {
     marginTop: 12,
-    backgroundColor: "#2563eb",
+    backgroundColor: BRAND_BLUE,
     borderRadius: 12,
     padding: 14,
     alignItems: "center"

@@ -90,7 +90,9 @@ export async function searchStaff(query) {
                 coordinates: member.coordinates ?? undefined,
                 staffId: member.id,
                 buildingId: member.building_id,
+                buildingName: buildingLabel,
                 roomNo: member.room_no ?? undefined,
+                staffPosition: member.staff_position ?? undefined,
                 email: member.email ?? undefined,
             };
         });

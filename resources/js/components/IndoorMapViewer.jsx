@@ -133,7 +133,7 @@ function IndoorMapViewer({
   };
   const getNodeColor = (location, index) => {
     if (highlightedPath.includes(index)) return "#22c55e";
-    if (selectedStart === index) return "#3b82f6";
+    if (selectedStart === index) return "#1b2c5d";
     if (selectedEnd === index) return "#8b5cf6";
     return colorMap[location.type] || "#6b7280";
   };
@@ -320,14 +320,14 @@ function IndoorMapViewer({
                             {
     /* Position dot */
   }
-                            <circle cx={userPosition.x} cy={userPosition.y} r={10} fill="#3b82f6" stroke="white" strokeWidth="3" />
+                            <circle cx={userPosition.x} cy={userPosition.y} r={10} fill="#1b2c5d" stroke="white" strokeWidth="3" />
                             <circle cx={userPosition.x} cy={userPosition.y} r={4} fill="white" />
                             
                             {
     /* Label */
   }
                             <g transform={`translate(${userPosition.x}, ${userPosition.y - 25})`}>
-                                <rect x="-25" y="-15" width="50" height="18" rx="4" fill="#3b82f6" opacity="0.9" />
+                                <rect x="-25" y="-15" width="50" height="18" rx="4" fill="#1b2c5d" opacity="0.9" />
                                 <text x="0" y="-3" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">You</text>
                             </g>
                         </g>}
