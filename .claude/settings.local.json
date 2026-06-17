@@ -14,7 +14,8 @@
       "Bash(\"C:/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
       "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew clean assembleDebug)",
       "Bash(adb -s HZQL1838KAL40600156 install -r c:/laragon/www/campusapp/android/app/build/outputs/apk/debug/app-debug.apk)",
-      "Bash(ipconfig)"
+      "Bash(ipconfig)",
+      "Bash(git add *)"
     ]
   }
 }
