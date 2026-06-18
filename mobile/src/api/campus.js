@@ -2,16 +2,24 @@ import { apiFetch } from "@/api/client";
 import { knownLocations } from "@/data/knownLocations";
 async function searchStaff(query) {
   const data = await apiFetch(`/staff/search?q=${encodeURIComponent(query)}`);
-  return data.map((member) => ({
-    id: `staff-${member.id}`,
-    name: member.full_name,
-    subtitle: `${member.building_name ?? member.building_id}${member.room_no ? `, Room ${member.room_no}` : ""}${member.staff_position ? ` \xB7 ${member.staff_position}` : ""}`,
-    type: "staff",
-    coordinates: member.coordinates ?? void 0,
-    staffId: member.id,
-    buildingId: member.building_id,
-    roomNo: member.room_no ?? void 0
-  }));
+  return data.map((member) => {
+    const buildingLabel = member.building_name ?? member.building_id;
+    const roomLabel = member.room_no ? `, Room ${member.room_no}` : "";
+    const roleLabel = member.staff_position ? ` · ${member.staff_position}` : "";
+    return {
+      id: `staff-${member.id}`,
+      name: member.full_name,
+      subtitle: `${buildingLabel}${roomLabel}${roleLabel}`,
+      type: "staff",
+      coordinates: member.coordinates ?? void 0,
+      staffId: member.id,
+      buildingId: member.building_id,
+      buildingName: buildingLabel,
+      roomNo: member.room_no ?? void 0,
+      staffPosition: member.staff_position ?? void 0,
+      email: member.email ?? void 0
+    };
+  });
 }
 async function searchCampusBuildingsDb(query) {
   const data = await apiFetch(`/campus-buildings/search?q=${encodeURIComponent(query)}`);

@@ -9,6 +9,7 @@ import {
   View
 } from "react-native";
 import { searchCampus } from "@/api/campus";
+import { BRAND_BLUE } from "@/constants/colors";
 const SCOPES = [
   { id: "all", label: "All" },
   { id: "staff", label: "Staff" },
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "#f3f4f6"
   },
-  scopeBtnActive: { backgroundColor: "#2563eb" },
+  scopeBtnActive: { backgroundColor: BRAND_BLUE },
   scopeText: { fontSize: 12, color: "#374151", fontWeight: "600" },
   scopeTextActive: { color: "#fff" },
   input: {

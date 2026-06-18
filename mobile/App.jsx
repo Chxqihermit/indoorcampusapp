@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { BRAND_BLUE } from "@/constants/colors";
 import { LoginScreen } from "@/screens/LoginScreen";
 import { RegisterScreen } from "@/screens/RegisterScreen";
 import { CampusMapScreen } from "@/screens/MapScreen";
@@ -33,7 +34,7 @@ function RootNavigator() {
   const { user, loading } = useAuth();
   if (loading) {
     return <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={BRAND_BLUE} />
       </View>;
   }
   return user ? <MainTabs /> : <AuthFlow />;

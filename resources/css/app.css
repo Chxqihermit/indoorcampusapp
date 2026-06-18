@@ -13,6 +13,23 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    /* NUST brand blue — Pantone 281 (RGB 27, 44, 93) */
+    --color-brand: #1b2c5d;
+    --color-brand-light: #2a427d;
+    --color-brand-dark: #141d3a;
+    --color-brand-muted: #4d6494;
+    --color-blue-50: #eef1f7;
+    --color-blue-100: #d9dfea;
+    --color-blue-200: #b3bfd5;
+    --color-blue-300: #8d9fc0;
+    --color-blue-400: #4d6494;
+    --color-blue-500: #243a75;
+    --color-blue-600: #1b2c5d;
+    --color-blue-700: #152347;
+    --color-blue-800: #101a35;
+    --color-blue-900: #0a1122;
+    --color-blue-950: #060a15;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -62,13 +79,16 @@
 }
 
 :root {
+    --brand-blue: #1b2c5d;
+    --brand-blue-light: #2a427d;
+    --brand-blue-dark: #141d3a;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.27 0.094 259);
+    --primary: #1b2c5d;
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -89,7 +109,7 @@
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary: #1b2c5d;
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -403,6 +423,90 @@
 
     .map-set-btn-end {
         @apply bg-blue-600 hover:bg-blue-700;
+    }
+
+    .staff-detail-card {
+        @apply absolute left-4 bottom-6 z-20 w-[min(100%,22rem)] overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200/80;
+        color-scheme: light;
+    }
+
+    .staff-detail-card__close {
+        @apply absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm hover:bg-white transition;
+    }
+
+    .staff-detail-card__hero {
+        @apply relative h-28 bg-gradient-to-br from-brand-dark to-brand;
+    }
+
+    .staff-detail-card__avatar {
+        @apply absolute -bottom-8 left-4 flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-gray-100 text-lg font-bold text-gray-700 shadow-md;
+    }
+
+    .staff-detail-card__body {
+        @apply px-4 pb-4 pt-10;
+    }
+
+    .staff-detail-card__name {
+        @apply text-lg font-bold text-gray-900 leading-tight;
+    }
+
+    .staff-detail-card__role {
+        @apply mt-1 text-sm text-gray-600;
+    }
+
+    .staff-detail-card__row {
+        @apply mt-3 flex items-start gap-2 text-sm text-gray-700;
+    }
+
+    .staff-detail-card__link {
+        @apply hover:text-brand transition;
+    }
+
+    .staff-detail-card__actions {
+        @apply mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-4;
+    }
+
+    .staff-detail-card__directions {
+        @apply inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-brand hover:bg-blue-100 transition;
+    }
+
+    .staff-detail-card__meta {
+        @apply inline-flex items-center gap-1.5 text-xs font-medium text-gray-500;
+    }
+
+    .staff-detail-card__footnote {
+        @apply mt-3 flex items-center gap-1.5 text-xs text-gray-500;
+    }
+
+    .staff-detail-card--sheet {
+        @apply left-0 right-0 bottom-0 w-full rounded-t-2xl rounded-b-none border-b-0;
+        transition: max-height 0.28s ease, transform 0.28s ease;
+        max-height: min(70vh, 28rem);
+    }
+
+    .staff-detail-card--sheet.staff-detail-card--collapsed {
+        @apply max-h-[3.75rem] overflow-hidden cursor-pointer border-t border-gray-200/80;
+        transform: translateY(0);
+    }
+
+    .staff-detail-card__peek {
+        @apply flex items-center gap-3 px-4 py-3 w-full text-left;
+    }
+
+    .staff-detail-card__peek-avatar {
+        @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-700;
+    }
+
+    .staff-detail-card__peek-name {
+        @apply flex-1 truncate text-base font-bold text-gray-900;
+    }
+
+    .staff-detail-card__grab {
+        @apply flex w-full justify-center pt-2 pb-1;
+    }
+
+    .staff-detail-card__grab-bar {
+        @apply h-1 w-10 rounded-full bg-gray-300;
     }
 
     /* Capacitor native shell (Android / iOS) — same web app in a WebView */

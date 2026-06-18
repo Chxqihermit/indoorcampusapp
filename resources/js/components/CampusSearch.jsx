@@ -118,15 +118,18 @@ function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = fa
         map.setStart(lng, lat, result.name);
         setOrigin(result.name);
       } else {
-        map.setEnd(lng, lat, result.name);
-        setDestination(result.name);
+        const label = result.type === "staff" && result.roomNo
+          ? `${result.name} (Room ${result.roomNo})`
+          : result.name;
+        map.setEnd(lng, lat, label, result.type === "staff" ? result : undefined);
+        setDestination(label);
       }
     } else {
       map.flyTo(lng, lat);
       const label = result.type === "staff" && result.roomNo
         ? `${result.name} (Room ${result.roomNo})`
         : result.name;
-      map.setEnd(lng, lat, label);
+      map.setEnd(lng, lat, label, result.type === "staff" ? result : undefined);
       setDestination(label);
     }
   };

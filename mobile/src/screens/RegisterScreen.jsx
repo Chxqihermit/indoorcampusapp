@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { BRAND_BLUE } from "@/constants/colors";
 function RegisterScreen({ onLoginPress }) {
   const { register } = useAuth();
   const [name, setName] = useState("");
@@ -70,14 +71,14 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   btn: {
-    backgroundColor: "#2563eb",
+    backgroundColor: BRAND_BLUE,
     borderRadius: 12,
     padding: 14,
     alignItems: "center",
     marginTop: 8
   },
   btnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  link: { textAlign: "center", color: "#2563eb", marginTop: 16, fontWeight: "600" },
+  link: { textAlign: "center", color: BRAND_BLUE, marginTop: 16, fontWeight: "600" },
   error: { color: "#dc2626", marginBottom: 8 }
 });
 export {

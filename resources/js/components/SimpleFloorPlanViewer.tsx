@@ -35,7 +35,7 @@ interface SimpleFloorPlanViewerProps {
 const NODE_COLORS: Record<string, string> = {
     entrance:   '#22C55E',
     service:    '#8B5CF6',
-    study:      '#3B82F6',
+    study:      '#1B2C5D',
     lab:        '#F59E0B',
     office:     '#14B8A6',
     restroom:   '#EC4899',
@@ -177,7 +177,7 @@ export default function SimpleFloorPlanViewer({
                                     {/* Dashed line */}
                                     <polyline
                                         points={route.waypoints.map(p => `${p.x},${p.y}`).join(' ')}
-                                        fill="none" stroke="#3B82F6" strokeWidth="3"
+                                        fill="none" stroke="#1B2C5D" strokeWidth="3"
                                         strokeLinecap="round" strokeLinejoin="round"
                                         strokeDasharray="8 6"
                                     />
@@ -185,7 +185,7 @@ export default function SimpleFloorPlanViewer({
                                     <circle
                                         cx={route.waypoints[route.waypoints.length - 1].x}
                                         cy={route.waypoints[route.waypoints.length - 1].y}
-                                        r="7" fill="#3B82F6" stroke="white" strokeWidth="2.5"
+                                        r="7" fill="#1B2C5D" stroke="white" strokeWidth="2.5"
                                     />
                                 </g>
                             )}
