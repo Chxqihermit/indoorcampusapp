@@ -20,6 +20,13 @@ createInertiaApp({
       .catch(() => resolvePageComponent(`./pages/${name}.jsx`, pages));
   },
   setup({ el, App, props }) {
+    const splash = document.getElementById('app-splash');
+    if (splash) {
+      const removeSplash = () => { if (splash.parentNode) splash.remove(); };
+      splash.addEventListener('transitionend', removeSplash, { once: true });
+      splash.classList.add('fade-out');
+      setTimeout(removeSplash, 700);
+    }
     const root = createRoot(el);
     root.render(
       <StrictMode>

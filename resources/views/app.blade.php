@@ -19,14 +19,93 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Background colour matches splash so there is no white flash --}}
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: #1d2758;
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: #0d1533;
+            }
+
+            /* ── Splash screen ─────────────────────────────────────── */
+            #app-splash {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0;
+                z-index: 99999;
+                background: radial-gradient(circle at center, #1d2758 0%, #0d1533 100%);
+                transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                            transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            #app-splash.fade-out {
+                opacity: 0;
+                transform: scale(1.04);
+                pointer-events: none;
+            }
+
+            @keyframes shield-pulse {
+                0%, 100% {
+                    transform: scale(1);
+                    filter: drop-shadow(0 0 12px rgba(246, 177, 31, 0.2));
+                }
+                50% {
+                    transform: scale(1.05);
+                    filter: drop-shadow(0 0 24px rgba(246, 177, 31, 0.5));
+                }
+            }
+
+            @keyframes progress-slide {
+                0%   { left: -45%; width: 40%; }
+                50%  { width: 55%; }
+                100% { left: 100%; width: 40%; }
+            }
+
+            .splash-logo {
+                animation: shield-pulse 2.4s ease-in-out infinite;
+                height: 80px;
+                width: auto;
+                margin-bottom: 20px;
+            }
+
+            .splash-title {
+                font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+                font-size: 1.375rem;
+                font-weight: 600;
+                color: #ffffff;
+                letter-spacing: -0.02em;
+                margin-bottom: 4px;
+            }
+
+            .splash-subtitle {
+                font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+                font-size: 0.8125rem;
+                color: rgba(255,255,255,0.5);
+                margin-bottom: 28px;
+            }
+
+            .splash-track {
+                width: 160px;
+                height: 3px;
+                background: rgba(255,255,255,0.12);
+                border-radius: 9999px;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .splash-bar {
+                position: absolute;
+                top: 0;
+                height: 100%;
+                background: linear-gradient(90deg, #f6b11f 0%, #d9272d 100%);
+                border-radius: 9999px;
+                animation: progress-slide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
             }
         </style>
 
@@ -44,8 +123,19 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+
+        {{-- Splash screen: visible before React boots, dismissed in app.jsx --}}
+        <div id="app-splash" role="status" aria-label="Loading NUST Campus App">
+            <img src="/images/nust-logo.png" class="splash-logo" alt="NUST Logo" />
+
+            <p class="splash-title">Campus Navigator</p>
+            <p class="splash-subtitle">Loading campus map&hellip;</p>
+
+            <div class="splash-track">
+                <div class="splash-bar"></div>
+            </div>
+        </div>
+
         @inertia
     </body>
-
-    
 </html>
