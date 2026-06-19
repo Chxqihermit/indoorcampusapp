@@ -41,7 +41,14 @@ function ResultIcon({ type }) {
       return <MapPin className={cls} />;
   }
 }
-function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = false }) {
+function CampusSearch({
+  mapRef,
+  startLabel = "",
+  endLabel = "",
+  sidebarOpen = false,
+  compactTop = false,
+  hideQuickCategories = false
+}) {
   const [mode, setMode] = useState("place");
   const [query, setQuery] = useState("");
   const [origin, setOrigin] = useState(startLabel);
@@ -108,28 +115,38 @@ function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = fa
     const map = mapRef.current;
     if (!map) return;
     if (result.type === "indoor") {
-      window.location.href = `/indoor-map?location=${result.indoorId}`;
+      const indoorPath = window.location.pathname.startsWith("/campus")
+        ? "/campus/indoor"
+        : "/indoor-map";
+      window.location.href = `${indoorPath}?location=${result.indoorId}`;
       return;
     }
     if (!result.coordinates) return;
     const [lng, lat] = result.coordinates;
+    const isStaff = result.type === "staff" || result.staffId != null;
+    const label = isStaff && result.roomNo
+      ? `${result.name} (Room ${result.roomNo})`
+      : result.name;
     if (mode === "directions") {
       if (activeField === "origin") {
         map.setStart(lng, lat, result.name);
         setOrigin(result.name);
       } else {
-        const label = result.type === "staff" && result.roomNo
-          ? `${result.name} (Room ${result.roomNo})`
-          : result.name;
-        map.setEnd(lng, lat, label, result.type === "staff" ? result : undefined);
+        if (isStaff) {
+          map.showStaffCard?.(result);
+        } else {
+          map.setEnd(lng, lat, label);
+        }
+        map.flyTo(lng, lat);
         setDestination(label);
       }
     } else {
+      if (isStaff) {
+        map.showStaffCard?.(result);
+      } else {
+        map.setEnd(lng, lat, label);
+      }
       map.flyTo(lng, lat);
-      const label = result.type === "staff" && result.roomNo
-        ? `${result.name} (Room ${result.roomNo})`
-        : result.name;
-      map.setEnd(lng, lat, label, result.type === "staff" ? result : undefined);
       setDestination(label);
     }
   };
@@ -184,7 +201,7 @@ function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = fa
   };
   return <div
     ref={containerRef}
-    className={`campus-search-container ${sidebarOpen ? "campus-search-container--sidebar-open" : ""}`}
+    className={`campus-search-container ${sidebarOpen ? "campus-search-container--sidebar-open" : ""} ${compactTop ? "campus-search-container--compact-top" : ""}`}
   >
             {mode === "place" ? <div className="campus-search-bar">
                     <Search className="w-5 h-5 text-gray-500 shrink-0 ml-1" />
@@ -305,7 +322,7 @@ function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = fa
             {
     /* Category pills */
   }
-            {mode === "place" && !isOpen && <div className="campus-category-pills">
+            {mode === "place" && !isOpen && !hideQuickCategories && <div className="campus-category-pills">
                     {QUICK_CATEGORIES.map((cat, i) => <button
     key={cat.label}
     type="button"
@@ -334,7 +351,10 @@ function CampusSearch({ mapRef, startLabel = "", endLabel = "", sidebarOpen = fa
     key={item.id}
     type="button"
     onMouseDown={(e) => e.preventDefault()}
-    onClick={() => handleSelect(item)}
+    onClick={(e) => {
+      e.stopPropagation();
+      handleSelect(item);
+    }}
     className={`campus-search-result ${i === highlightIndex ? "campus-search-result-active" : ""}`}
   >
                             <ResultIcon type={item.type} />

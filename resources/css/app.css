@@ -205,6 +205,10 @@
         transition: left 300ms ease;
     }
 
+    .campus-search-container--compact-top {
+        top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    }
+
     @media (min-width: 640px) {
         .campus-search-container--sidebar-open {
             left: calc(16rem + 0.75rem);
@@ -426,7 +430,7 @@
     }
 
     .staff-detail-card {
-        @apply absolute left-4 bottom-6 z-20 w-[min(100%,22rem)] overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200/80;
+        @apply absolute left-4 bottom-6 z-[55] w-[min(100%,22rem)] overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200/80;
         color-scheme: light;
     }
 
@@ -444,6 +448,11 @@
 
     .staff-detail-card__body {
         @apply px-4 pb-4 pt-10;
+    }
+
+    .staff-detail-card--sheet .staff-detail-card__body {
+        @apply overflow-y-auto;
+        max-height: calc(min(72vh, 28rem) - 7.5rem);
     }
 
     .staff-detail-card__name {
@@ -479,18 +488,34 @@
     }
 
     .staff-detail-card--sheet {
-        @apply left-0 right-0 bottom-0 w-full rounded-t-2xl rounded-b-none border-b-0;
-        transition: max-height 0.28s ease, transform 0.28s ease;
-        max-height: min(70vh, 28rem);
+        @apply left-0 right-0 bottom-0 w-full rounded-t-2xl rounded-b-none border-b-0 z-[55];
+        max-height: min(72vh, 28rem);
+        overflow: hidden;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        will-change: transform;
+    }
+
+    .staff-detail-card--sheet.staff-detail-card--dragging {
+        transition: none;
     }
 
     .staff-detail-card--sheet.staff-detail-card--collapsed {
-        @apply max-h-[3.75rem] overflow-hidden cursor-pointer border-t border-gray-200/80;
-        transform: translateY(0);
+        @apply cursor-grab active:cursor-grabbing;
+    }
+
+    .staff-detail-card__sheet-header {
+        @apply relative shrink-0 bg-white;
+        touch-action: none;
+    }
+
+    .staff-detail-card__close--sheet {
+        @apply top-2 right-3;
     }
 
     .staff-detail-card__peek {
-        @apply flex items-center gap-3 px-4 py-3 w-full text-left;
+        @apply flex items-center gap-3 px-4 pb-3 w-full text-left pointer-events-none;
+        min-height: 2.75rem;
     }
 
     .staff-detail-card__peek-avatar {
@@ -502,7 +527,7 @@
     }
 
     .staff-detail-card__grab {
-        @apply flex w-full justify-center pt-2 pb-1;
+        @apply flex w-full justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing;
     }
 
     .staff-detail-card__grab-bar {
@@ -524,7 +549,17 @@
         top: calc(4rem + env(safe-area-inset-top) + 0.75rem);
     }
 
-    html.capacitor-native .maplibregl-ctrl-top-right {
-        top: calc(1rem + env(safe-area-inset-top));
+    html.capacitor-native .campus-search-container--compact-top,
+    html.expo-webview .campus-search-container--compact-top {
+        top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    }
+
+    html.expo-webview body {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html.expo-webview .maplibregl-ctrl-top-right {
+        top: calc(1rem + env(safe-area-inset-top, 0px));
     }
 }
