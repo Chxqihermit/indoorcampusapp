@@ -13,7 +13,39 @@ const CAMPUS_LOCATIONS = {
   // Lower campus (Pasteur St / engineering cluster)
   lower: [17.0738, -22.56585]
 };
-const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
+
+function isStaffResult(meta) {
+  if (!meta) return false;
+  if (meta.type === "building" || meta.type === "indoor") return false;
+  return meta.type === "staff" || meta.staffId != null;
+}
+
+function staffFromSearchMeta(meta, coords) {
+  return {
+    staffId: meta.staffId ?? meta.id,
+    name: meta.name,
+    staffPosition: meta.staffPosition ?? "",
+    email: meta.email ?? "",
+    buildingName: meta.buildingName ?? "",
+    roomNo: meta.roomNo ?? "",
+    subtitle: meta.subtitle ?? "",
+    coordinates: coords
+  };
+}
+
+function staffFromMarkerProps(props, coords) {
+  return {
+    staffId: props.staffId,
+    name: props.staffName || props.name || "Staff member",
+    staffPosition: props.staffPosition || "",
+    email: props.staffEmail || "",
+    buildingName: props.staffBuilding || "",
+    roomNo: props.staffRoom || "",
+    subtitle: props.staffSubtitle || "",
+    coordinates: coords
+  };
+}
+const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const keyHandlerRef = useRef(null);
@@ -35,6 +67,16 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
   const mobileSheetRef = useRef(false);
   const setStaffCardRef = useRef(setStaffCard);
   const staffCardApiRef = useRef({});
+  const staffCardGuardRef = useRef(false);
+  const openStaffCard = useCallback((meta, coords, collapsed = false) => {
+    if (!isStaffResult(meta)) return;
+    const normalized = { ...meta, type: "staff" };
+    setStaffCard({ staff: staffFromSearchMeta(normalized, coords), collapsed });
+    staffCardGuardRef.current = true;
+    window.setTimeout(() => {
+      staffCardGuardRef.current = false;
+    }, 500);
+  }, []);
   const toggleCoordDebug = useCallback(() => {
     setCoordDebugEnabled((prev) => {
       const next = !prev;
@@ -51,10 +93,17 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     mobileSheetRef.current = mobileSheet;
   }, [mobileSheet]);
   useEffect(() => {
+    onStaffCardChange?.({
+      visible: !!staffCard,
+      collapsed: staffCard?.collapsed ?? false
+    });
+  }, [staffCard, onStaffCardChange]);
+  useEffect(() => {
     const updateMobileSheet = () => {
       setMobileSheet(
         window.matchMedia("(max-width: 768px)").matches
         || document.documentElement.classList.contains("capacitor-native")
+        || document.documentElement.classList.contains("expo-webview")
       );
     };
     updateMobileSheet();
@@ -63,33 +112,14 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     return () => mq.removeEventListener("change", updateMobileSheet);
   }, []);
   useEffect(() => {
-    const staffFromMeta = (meta, coords) => ({
-      staffId: meta.staffId ?? meta.id,
-      name: meta.name,
-      staffPosition: meta.staffPosition ?? "",
-      email: meta.email ?? "",
-      buildingName: meta.buildingName ?? "",
-      roomNo: meta.roomNo ?? "",
-      subtitle: meta.subtitle ?? "",
-      coordinates: coords
-    });
-    const staffFromProps = (props, coords) => ({
-      staffId: props.staffId,
-      name: props.staffName || props.name || "Staff member",
-      staffPosition: props.staffPosition || "",
-      email: props.staffEmail || "",
-      buildingName: props.staffBuilding || "",
-      roomNo: props.staffRoom || "",
-      subtitle: props.staffSubtitle || "",
-      coordinates: coords
-    });
     staffCardApiRef.current = {
       showFromMeta(meta, coords, collapsed = false) {
-        if (!meta || meta.type !== "staff") return;
-        setStaffCardRef.current({ staff: staffFromMeta(meta, coords), collapsed });
+        if (!isStaffResult(meta)) return;
+        openStaffCard(meta, coords, collapsed);
       },
       showFromProps(props, coords, collapsed = false) {
-        setStaffCardRef.current({ staff: staffFromProps(props, coords), collapsed });
+        if (props?.isStaff !== "1") return;
+        setStaffCardRef.current({ staff: staffFromMarkerProps(props, coords), collapsed });
       },
       collapse() {
         setStaffCardRef.current((prev) => prev ? { ...prev, collapsed: true } : null);
@@ -101,7 +131,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
         setStaffCardRef.current(null);
       }
     };
-  }, []);
+  }, [openStaffCard]);
   useEffect(() => {
     coordDebugEnabledRef.current = coordDebugEnabled;
   }, [coordDebugEnabled]);
@@ -1329,11 +1359,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             } else {
               endPt = [lng, lat];
               if (label !== void 0) endLabel = label;
-              endStaffMeta = staffMeta?.type === "staff" ? staffMeta : null;
-              if (endStaffMeta) {
-                staffCardApiRef.current.showFromMeta(endStaffMeta, [lng, lat], false);
+              if (isStaffResult(staffMeta)) {
+                endStaffMeta = { ...staffMeta, type: "staff" };
+                staffCardApiRef.current.showFromMeta?.(endStaffMeta, [lng, lat], false);
               } else {
-                staffCardApiRef.current.dismiss();
+                endStaffMeta = null;
+                staffCardApiRef.current.dismiss?.();
               }
               map.current.getSource("walk-end")?.setData?.({ type: "FeatureCollection", features: [feature] });
             }
@@ -1508,7 +1539,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
             endLabel = tmpLabel;
             if (startPt) setPoint("start", startPt[0], startPt[1]);
             else if (map.current.getSource("walk-start")) map.current.getSource("walk-start").setData({ type: "FeatureCollection", features: [] });
-            if (endPt) setPoint("end", endPt[0], endPt[1]);
+            if (endPt) setPoint("end", endPt[0], endPt[1], endLabel, endStaffMeta ?? void 0);
             else if (map.current.getSource("walk-end")) map.current.getSource("walk-end").setData({ type: "FeatureCollection", features: [] });
             notifyRouteState();
             tryComputeRoute();
@@ -1546,7 +1577,9 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
                 let errorMsg = "Could not get your location";
                 switch (err.code) {
                   case err.PERMISSION_DENIED:
-                    errorMsg = "Permission denied. Please allow location access in your browser settings.";
+                    errorMsg = document.documentElement.classList.contains("expo-webview")
+                      ? "Permission denied. Allow location access for CampusNav in your device settings."
+                      : "Permission denied. Please allow location access in your browser settings.";
                     break;
                   case err.POSITION_UNAVAILABLE:
                     errorMsg = "Location unavailable. Try turning on GPS.";
@@ -1595,6 +1628,7 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
           map.current.on("click", (e) => {
             const hitMarker = map.current.queryRenderedFeatures(e.point, { layers: ["nust-buildings-circles"] });
             if (!hitMarker.length) {
+              if (staffCardGuardRef.current) return;
               if (mobileSheetRef.current) {
                 staffCardApiRef.current.collapse();
               }
@@ -1945,6 +1979,16 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     setEnd: (lng, lat, label, staffMeta) => {
       walkApiRef.current?.setPoint("end", lng, lat, label, staffMeta);
     },
+    showStaffCard: (staff) => {
+      if (!staff?.coordinates) return;
+      const [lng, lat] = staff.coordinates;
+      const normalized = { ...staff, type: "staff" };
+      const label = normalized.roomNo
+        ? `${normalized.name} (Room ${normalized.roomNo})`
+        : normalized.name;
+      openStaffCard(normalized, [lng, lat], false);
+      walkApiRef.current?.setPoint("end", lng, lat, label, normalized);
+    },
     flyTo: (lng, lat, zoom = 18) => {
       map.current?.flyTo({ center: [lng, lat], zoom, duration: 800 });
     },
@@ -1974,14 +2018,12 @@ const MapComponent = forwardRef(({ onRouteStateChange }, ref) => {
     collapsed={staffCard.collapsed}
     sheet={mobileSheet}
     onClose={() => staffCardApiRef.current.dismiss()}
-    onToggle={() => {
-      if (staffCard.collapsed) {
-        staffCardApiRef.current.expand();
-      } else if (mobileSheet) {
+    onCollapse={() => staffCardApiRef.current.collapse()}
+    onExpand={() => staffCardApiRef.current.expand()}
+    onDirections={() => {
+      if (mobileSheet) {
         staffCardApiRef.current.collapse();
       }
-    }}
-    onDirections={() => {
       gpsBtnRef.current?.click();
     }}
   />}

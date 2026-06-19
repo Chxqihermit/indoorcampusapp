@@ -1,7 +1,9 @@
 # Campus App - Installation Guide
 
+> **Note (June 2026):** For the current setup — including the Expo WebView mobile app, public `/campus` route, and GPS bridge — start with **[README.md](README.md)** and **[MOBILE_SETUP.md](MOBILE_SETUP.md)**. This guide covers Laragon/MySQL installation steps in more detail.
+
 ## Overview
-This document outlines the complete setup process for the Campus App system, which uses Laravel, React/TypeScript, and MySQL within a Laragon environment.
+This document outlines the complete setup process for the Campus App system, which uses Laravel, React (JSX/Inertia), and MySQL within a Laragon environment.
 
 ## Prerequisites
 - **Laragon** installed and running
@@ -11,9 +13,10 @@ This document outlines the complete setup process for the Campus App system, whi
 - **Composer** installed globally
 
 ## System Stack
-- **Backend**: Laravel 12.37.0
-- **Frontend**: React with TypeScript
-- **Build Tool**: Vite
+- **Backend**: Laravel 12
+- **Frontend**: React 19 + JSX, Inertia.js, MapLibre GL, Tailwind CSS
+- **Mobile**: Expo 52 + WebView (`mobile/` → `/campus`)
+- **Build Tool**: Vite 7
 - **Database**: MySQL (via Laragon)
 - **Testing**: Pest with PHPUnit
 
@@ -99,19 +102,32 @@ php artisan serve
 ```
 - Backend API available at: `http://localhost:8000`
 
-### Terminal 2: Start Frontend Development Server
+### Terminal 2: Frontend (browser development)
+
 ```powershell
 cd c:\laragon\www\campusapp
-npm run dev
+npm run dev:host
 ```
-- Frontend with hot reload available at: `http://localhost:5173`
 
-Alternatively, you can use Laragon's built-in server and configure a virtual host.
+Starts the Vite dev server with **hot reload**. Use together with `php artisan serve` — Laravel on port 8000, Vite usually on port 5173.
 
-### Build for Production
+> **`npm run dev`** in this project runs `vite build` (same as **`npm run build`**), **not** hot reload. For live editing use **`npm run dev:host`**.
+
+### Build for production / mobile
+
 ```powershell
 npm run build
 ```
+
+Required for the mobile WebView — the emulator loads built assets from Laravel, not the Vite dev server.
+
+### Mobile (optional)
+```powershell
+cd mobile
+npm install
+npx expo start
+```
+See [MOBILE_SETUP.md](MOBILE_SETUP.md).
 
 ---
 
@@ -223,8 +239,8 @@ php artisan migrate:status
 
 ### Issue: Frontend not updating (hot reload not working)
 **Solution**: 
-1. Ensure `npm run dev` is running in a separate terminal
-2. Check that your browser can access `http://localhost:5173`
+1. Ensure **`npm run dev:host`** is running (not `npm run dev` — that only builds once)
+2. Ensure `php artisan serve` is running in another terminal
 3. Clear browser cache (Ctrl+Shift+Delete)
 
 ### Issue: CORS errors in browser console
@@ -315,8 +331,9 @@ php artisan serve                # Start development server
 
 ### npm Commands
 ```powershell
-npm run dev                      # Start development server with hot reload
-npm run build                    # Build for production
+npm run dev:host                 # Vite dev server with hot reload (browser)
+npm run build                    # Production build to public/build/
+npm run dev                      # Same as build in this project (no hot reload)
 npm run lint                     # Run ESLint
 npm test                         # Run tests
 ```
@@ -351,7 +368,7 @@ For issues or questions:
 
 ---
 
-**Last Updated**: November 28, 2025
+**Last Updated**: June 2026
 **System Version**: Campus App v1.0
 **PHP Version**: 8.4.1
 **MySQL Version**: 8.4.3

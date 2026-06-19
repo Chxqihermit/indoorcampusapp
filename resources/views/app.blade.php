@@ -121,6 +121,16 @@
         @viteReactRefresh
         @vite(['resources/js/app.jsx','resources/css/app.css', "resources/js/pages/{$page['component']}.jsx"])
         @inertiaHead
+        <script>
+            setTimeout(function () {
+                var splash = document.getElementById('app-splash');
+                if (!splash || !splash.parentNode) return;
+                var hint = document.createElement('p');
+                hint.style.cssText = 'font-family:sans-serif;font-size:12px;color:rgba(255,255,255,0.7);margin-top:16px;max-width:280px;text-align:center;line-height:1.5';
+                hint.textContent = 'Still loading? From the project root run: npm run build';
+                splash.appendChild(hint);
+            }, 12000);
+        </script>
     </head>
     <body class="font-sans antialiased">
 

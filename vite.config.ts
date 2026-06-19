@@ -28,11 +28,14 @@ export default defineConfig({
         },
     },
     server: {
-        host: 'localhost',
-        port:3000,
+        host: '0.0.0.0',
+        port: 3000,
+        strictPort: true,
+        hmr: {
+            host: 'localhost',
+        },
         proxy: {
             '/api': 'http://localhost:8000',
-            //changeOrigin: true,
         },
     },
     build: {

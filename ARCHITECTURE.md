@@ -1,5 +1,7 @@
 # CampusNav - Code Architecture & Component Documentation
 
+> **Note (June 2026):** This document describes the map engine in depth but predates several UI changes. For current architecture (Expo WebView mobile, `/campus` route, `CampusMapLayout`, `StaffDetailCard`, GPS bridge), see **[README.md](README.md)** and **[MOBILE_SETUP.md](MOBILE_SETUP.md)**. Component filenames below reference `.tsx` in places; the live codebase uses **`.jsx`** for hand-written UI.
+
 ## Table of Contents
 
 1. [Overall System Architecture](#overall-system-architecture)

@@ -1,44 +1,47 @@
-# CampusNav - Campus Wayfinding & Navigation System
+# CampusNav — Campus Wayfinding & Navigation
 
-## Overview
+**CampusNav** is a campus navigation platform for **NUST (Namibia University of Science and Technology)**. It provides outdoor walking routes on an interactive MapLibre map, staff and building search, Google Maps–style staff detail cards, and indoor floor navigation — backed by **Laravel 12** + **MySQL** (Laragon).
 
-**CampusNav** is a campus navigation platform for **NUST (Namibia University of Science and Technology)**. It provides outdoor walking routes on an interactive map, staff and building search, and indoor floor navigation — backed by **Laravel 12** + **MySQL** (Laragon).
-
-- **Web** — full dashboard at `/dashboard` (React + Inertia + MapLibre)
-- **Mobile** — **native** Android/iOS app in `mobile/` (Expo / React Native), not a WebView
+| Surface | URL / entry | Auth |
+|---------|-------------|------|
+| **Web dashboard** | `/dashboard` | Login required (Fortify) |
+| **Public campus map** | `/campus` | No login — used by mobile WebView |
+| **Indoor navigation** | `/indoor-map` or `/campus/indoor` | Public on `/campus/indoor` |
+| **Mobile (Expo)** | WebView → `/campus` | No login |
 
 ---
 
-## Key Features
+## Key features
 
-### Outdoor map (web dashboard)
-- **MapLibre GL** map with 3D buildings, satellite/vector styles, and campus GeoJSON layers
+### Outdoor map
+- **MapLibre GL** — 3D buildings, satellite/vector styles, campus GeoJSON layers, bold building labels
 - **A\* pathfinding** on walkway graph (`nust-walkways.geojson`) with building avoidance
-- **Live route trimming** — once a route is active, GPS tracking shortens the blue line as you walk toward the destination and updates remaining distance/time
-- **Campus search** — search staff, buildings, and POIs with **All | Staff | Buildings** filters
+- **Live GPS** — continuous position tracking, blue user dot, route line trims as you walk
+- **Campus search** — staff, buildings, and POIs with **All | Staff | Buildings** scope filters
+- **Quick category pills** — Buildings, Restaurants, Parking, ATMs, Hostels (hidden while staff card is expanded on mobile)
 - **Directions mode** — set start/end, swap points, use GPS as start
-- **GPS hotkey** — press `*` to use current location (ignored while typing in an input)
+- **Staff detail card** — Google Maps–style bottom sheet on mobile (swipe up/down, peek bar at bottom)
+- **GPS** — press `*` for current location (ignored while typing in an input); staff **Directions** button sets your location and collapses the card
 - **Keyboard shortcuts** — `Shift` + arrow keys for pitch/bearing; right-click resets view
+
+### Mobile (Expo — recommended)
+- **Expo shell** in `mobile/` loads the **same web UI** at `/campus` in a WebView — one codebase for map, search, routing, and staff cards
+- **Native GPS bridge** — `expo-location` permissions + JavaScript bridge (WebView geolocation alone is unreliable on Android)
+- Two tabs: **CampusNav** (map) and **About**
+- No separate React Native map to maintain
+
+### Optional Capacitor shell
+- Root-level **Capacitor** wrapper (`android/`, `ios/`) can load `/campus` in a WebView — alternative to Expo
+
+### Indoor navigation
+- Floor plans, room search, and path highlighting
+- Laravel-seeded indoor locations and graph data
 
 ### API & data
 - Staff directory search (`staffdirectory` table)
 - Campus building search (`campusbuilding` table)
 - Indoor location search and routing
 - WiFi positioning endpoints
-- Bearer-token API auth for mobile (no Sanctum package required)
-
-### Mobile (native Android & iOS)
-- **Expo / React Native** in `mobile/` — true native app (maps, GPS, tabs)
-- Walkway routing + live route trimming (same logic as web, native implementation)
-- Staff/building search, indoor nav, WiFi screens
-- Store-ready via **EAS Build**
-- See [MOBILE_SETUP.md](MOBILE_SETUP.md)
-
-> An optional **Capacitor** WebView wrapper exists at the repo root if you ever want the website in a shell — but **`mobile/`** is the recommended native app.
-
-### Indoor navigation
-- Floor plans, room search, and path highlighting on `/indoor-map`
-- Laravel-seeded indoor locations and graph data
 
 ---
 
@@ -46,37 +49,44 @@
 
 | Layer | Technology |
 |-------|------------|
-| **Web UI** | React 19 + JSX, Inertia.js, MapLibre GL |
-| **Mobile** | Expo / React Native (`mobile/`) — native, not WebView |
-| **Optional** | Capacitor WebView wrapper (`android/`, `ios/`) |
-| **Map** | MapLibre GL |
+| **Web UI** | React 19 + JSX, Inertia.js, MapLibre GL, Tailwind CSS |
+| **Mobile** | Expo 52 + `react-native-webview` → `/campus` (same React app) |
+| **Optional native shell** | Capacitor 8 (`android/`, `ios/`) |
 | **Backend** | Laravel 12, Fortify auth |
-| **Database** | MySQL (Laragon) — `nustcampusdatabase` |
-| **Build** | Vite |
+| **Database** | MySQL (Laragon) — e.g. `nustcampusdatabase` |
+| **Build** | Vite 7 |
 
 ### Project structure
 
 ```
 indoorcampusapp/
-├── mobile/                 # Native Expo app (official mobile)
-├── android/                # Optional Capacitor WebView (Android)
-├── ios/                    # Optional Capacitor WebView (iOS)
-├── app/                    # Laravel models, controllers, middleware
-├── public/data/            # GeoJSON (campus, buildings, walkways, labels)
+├── mobile/                      # Expo app (WebView shell + GPS bridge)
+│   ├── src/screens/WebAppScreen.jsx
+│   └── src/webview/geoBridge.js
+├── android/, ios/               # Optional Capacitor WebView
+├── app/                         # Laravel controllers, models, providers
+├── public/data/                 # GeoJSON (campus, buildings, walkways, labels)
 ├── resources/
 │   ├── js/
-│   │   ├── app.jsx         # Inertia entry
-│   │   ├── components/     # MapComponent, CampusSearch, MapHeader, …
-│   │   ├── pages/          # dashboard, IndoorNavigation, auth, settings
-│   │   ├── utils/          # campusSearch.js, pathfinding, …
-│   │   ├── actions/        # Wayfinder-generated route helpers (.ts)
-│   │   └── routes/         # Wayfinder-generated route helpers (.ts)
-│   └── css/app.css
-├── routes/api.php          # Staff, buildings, indoor, WiFi, auth APIs
-└── database/seeders/       # Users, buildings, indoor locations
+│   │   ├── app.jsx              # Inertia entry (+ expo geolocation init)
+│   │   ├── components/
+│   │   │   ├── MapComponent.jsx
+│   │   │   ├── CampusMapLayout.jsx   # Shared layout (dashboard + /campus)
+│   │   │   ├── CampusSearch.jsx
+│   │   │   ├── StaffDetailCard.jsx   # Swipeable bottom sheet on mobile
+│   │   │   └── MapHeader.jsx         # Hidden on /campus (full-screen map)
+│   │   ├── pages/
+│   │   │   ├── dashboard.jsx
+│   │   │   └── campus.jsx            # Public map (no sidebar/header)
+│   │   └── lib/
+│   │       ├── capacitor.js
+│   │       └── expoGeolocation.js    # Patches navigator.geolocation in WebView
+│   └── css/app.css              # Brand blue Pantone 281 (#1B2C5D)
+├── routes/web.php               # /campus, /campus/indoor, /dashboard
+└── routes/api.php               # Staff, buildings, indoor, WiFi APIs
 ```
 
-> **Note:** Wayfinder regenerates small `.ts` helper files under `resources/js/actions` and `resources/js/routes` on each build. All hand-written UI code is **JSX**.
+> Wayfinder regenerates `.ts` route helpers under `resources/js/actions` and `resources/js/routes` on each build. Hand-written UI is **JSX**.
 
 ---
 
@@ -84,19 +94,20 @@ indoorcampusapp/
 
 ### Prerequisites
 - PHP 8.2+
-- Node.js 18+
+- Node.js 20+
 - Composer
 - Laragon (MySQL) or compatible MySQL server
+- **Mobile:** Android Studio emulator and/or Expo Go
 
 ### Backend
 
 ```powershell
 composer install
-cp .env.example .env   # configure DB_* for MySQL
+cp .env.example .env   # configure DB_*
 php artisan key:generate
 php artisan migrate
 php artisan db:seed
-php artisan serve
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 Example `.env` database settings (Laragon):
@@ -116,12 +127,39 @@ Staff records live in the MySQL `staffdirectory` table (not Laravel seeders).
 
 ```powershell
 npm install
-npm run build        # production
-# or
-npm run dev:host     # Vite dev server with HMR
 ```
 
-Open **http://127.0.0.1:8000/dashboard** (log in after seeding — default user from `UserSeeder`).
+#### Which npm script to use
+
+| Command | What it does | Hot reload? | When to use |
+|---------|----------------|-------------|-------------|
+| **`npm run dev:host`** | Starts the Vite **dev server** (`vite --host`) | **Yes** — changes apply as you save | Daily **browser** development on `/dashboard` or `/campus` |
+| **`npm run build`** | One-off **production build** into `public/build/` | No | **Mobile WebView**, production, or when not running the Vite dev server |
+| **`npm run dev`** | Same as `build` in this project (`vite build`) | No | Prefer **`dev:host`** (web) or **`build`** (mobile) instead |
+
+**Browser development (hot reload):**
+
+```powershell
+# Terminal 1
+php artisan serve
+
+# Terminal 2
+npm run dev:host
+```
+
+Laravel serves pages on port **8000**; Vite serves JS/CSS with HMR (usually port **5173**). Keep both running.
+
+**Production / mobile (no dev server):**
+
+```powershell
+npm run build
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+The Expo app and Android emulator load built files from Laravel — they **cannot** use `dev:host`. After any change to `resources/js` or `resources/css`, run **`npm run build`** again and reload the mobile app.
+
+- **Dashboard:** http://127.0.0.1:8000/dashboard
+- **Public campus map:** http://127.0.0.1:8000/campus
 
 Optional map styling:
 
@@ -130,35 +168,53 @@ VITE_MAPTILER_KEY=your-key
 VITE_MAPTILER_STYLE=hybrid
 ```
 
-### Mobile (native)
+### Mobile (Expo)
+
+See **[MOBILE_SETUP.md](MOBILE_SETUP.md)** for the full guide.
 
 ```powershell
+# Terminal 1 — project root
+npm run build
+php artisan serve --host=0.0.0.0 --port=8000
+
+# Terminal 2
 cd mobile
 npm install
 npx expo start
 ```
 
-Backend: `php artisan serve --host=0.0.0.0 --port=8000`  
-Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see [MOBILE_SETUP.md](MOBILE_SETUP.md)).
+`mobile/.env` (Android emulator):
+
+```env
+EXPO_PUBLIC_API_URL=http://10.0.2.2:8000
+EXPO_PUBLIC_WEB_URL=http://10.0.2.2:8000/campus
+```
 
 ---
 
 ## Usage
 
-### Finding a route on the dashboard
+### Finding a route
 
 1. Search for a staff member, building, or POI — or open **Directions** from the search bar.
-2. Set a **start** (map click, search, or `*` / GPS button for current location).
-3. Set a **destination**.
+2. Set a **start** (search, map click, or `*` / GPS for current location).
+3. Set a **destination** (building) or search a **staff member** (opens staff card).
 4. The blue route line appears with distance and estimated time.
-5. **Walk the route** — with location permission granted, the line **shortens behind you** as GPS updates and the popup shows **remaining** distance/time. Tracking stops when you arrive (~15 m from destination) or clear the route.
+5. **Walk the route** — GPS shortens the line behind you and updates remaining distance/time.
+
+### Staff card (mobile)
+- Search or tap a staff marker → card slides up from the bottom
+- **Swipe** the handle to expand or collapse to the peek bar
+- **Directions** → collapses the card, uses GPS as start, routes to the staff member
+- Category pills (Buildings, Parking, …) hide while the card is expanded
 
 ### Search scopes
 - **All** — staff, database buildings, known POIs, indoor locations
 - **Staff** — staff directory only
 - **Buildings** — campus buildings, POIs, indoor locations
 
-### Keyboard & map
+### Keyboard & map (web)
+
 | Action | Shortcut |
 |--------|----------|
 | GPS / my location | `*` |
@@ -177,10 +233,8 @@ Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see [MOBILE_SETUP.md](MOBILE_SETUP.m
 | GET | `/api/staff/search?q=` | Staff directory search |
 | GET | `/api/campus-buildings/search?q=` | Building search |
 | GET | `/api/locations/search?q=` | Indoor location search |
-| POST | `/api/login` | Mobile login (returns bearer token) |
-| POST | `/api/register` | Mobile registration |
 
-Full routes are defined in `routes/api.php`.
+Full routes: `routes/api.php`.
 
 ---
 
@@ -200,38 +254,51 @@ Full routes are defined in `routes/api.php`.
 ## Development commands
 
 ```powershell
-php artisan serve          # Laravel (port 8000)
-npm run dev:host           # Vite dev server
-npm run build              # Production asset build
-npm run lint               # ESLint
-npm run format             # Prettier
-php artisan migrate        # Run migrations
-php artisan db:seed        # Seed users, buildings, indoor data
-npm run mobile:install     # Install mobile/ dependencies
-npm run mobile             # Start Expo dev server
-npm run cap:sync           # Optional Capacitor WebView sync
+php artisan serve --host=0.0.0.0 --port=8000
+npm run dev:host           # Browser only — hot reload (use with php artisan serve)
+npm run build              # Compile assets to public/build/ — required for mobile
+npm run lint
+npm run format
+php artisan migrate
+php artisan db:seed
+npm run mobile:install
+npm run mobile             # Start Expo from project root
+npm run cap:sync           # Optional Capacitor sync
 ```
+
+> **`npm run dev`** runs the same as **`npm run build`** in this repo (no hot reload). Use **`dev:host`** for web editing or **`build`** for mobile/production.
+
+**After changing web code for mobile:** run `npm run build` and reload the Expo app — the emulator cannot reach the Vite dev server.
 
 ---
 
 ## Troubleshooting
 
-**Map blank** — Check browser console for WebGL/tile errors; ensure the map container has height; try without `VITE_MAPTILER_KEY` (falls back to free styles).
+| Issue | Fix |
+|-------|-----|
+| **Map blank** | Check browser console; ensure map container has height; try without `VITE_MAPTILER_KEY` |
+| **Mobile stuck on splash** | Run `npm run build`; keep `php artisan serve --host=0.0.0.0` running; check `EXPO_PUBLIC_WEB_URL` |
+| **Mobile assets 404 / wrong host** | `AppServiceProvider` forces asset URLs from the request host (`10.0.2.2` in emulator) |
+| **No route found** | Ensure `public/data/nust-walkways.geojson` exists; start/end near walkways |
+| **GPS permission denied (mobile)** | Allow location for CampusNav in device settings; reload app; set mock location in Android emulator (Extended controls → Location) |
+| **GPS on web** | HTTPS, `localhost`, or LAN IP; allow browser location permission — see [GPS_LOCATION_GUIDE.md](GPS_LOCATION_GUIDE.md) |
+| **Staff search empty** | MySQL running; rows in `staffdirectory`; test `/api/staff/search?q=test` |
 
-**No route found** — Ensure `public/data/nust-walkways.geojson` exists; place start/end on or near walkways.
+---
 
-**GPS / route trimming not working** — Geolocation requires HTTPS, `localhost`, or the Capacitor native app; allow location permission; route trimming only runs while a route is displayed.
+## Related docs
 
-**Staff search empty** — Confirm MySQL is running, `staffdirectory` has rows, and `/api/staff/search?q=test` returns JSON.
-
-**API 404** — Ensure `routes/api.php` is registered in `bootstrap/app.php`.
+| Doc | Contents |
+|-----|----------|
+| [MOBILE_SETUP.md](MOBILE_SETUP.md) | Expo, WebView, env vars, GPS bridge, troubleshooting |
+| [mobile/README.md](mobile/README.md) | Short mobile overview |
+| [GPS_LOCATION_GUIDE.md](GPS_LOCATION_GUIDE.md) | GPS usage and permission help |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Deep dive into map/pathfinding (partially dated) |
 
 ---
 
 ## License
 
 MIT License — see LICENSE.
-
----
 
 **Last updated:** June 2026

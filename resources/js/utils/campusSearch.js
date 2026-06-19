@@ -15,7 +15,10 @@ export function getRecentSearches() {
 
 export function saveRecentSearch(result) {
     const recents = getRecentSearches().filter((r) => r.id !== result.id);
-    recents.unshift({ ...result, type: 'recent' });
+    const storedType = result.type === 'staff' || result.type === 'building' || result.type === 'indoor'
+        ? result.type
+        : 'recent';
+    recents.unshift({ ...result, type: storedType });
     localStorage.setItem(RECENT_KEY, JSON.stringify(recents.slice(0, MAX_RECENTS)));
 }
 

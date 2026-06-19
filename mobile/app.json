@@ -24,13 +24,13 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.nust.campusnav",
+      "usesCleartextTraffic": true,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
-      "expo-secure-store",
       [
         "expo-location",
         {

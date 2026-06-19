@@ -12,6 +12,10 @@ export function geolocationAllowed() {
 
     const { protocol, hostname } = window.location;
 
+    if (document.documentElement.classList.contains('expo-webview')) {
+        return true;
+    }
+
     return (
         protocol === 'https:'
         || hostname === 'localhost'
@@ -19,6 +23,7 @@ export function geolocationAllowed() {
         || hostname === '10.0.2.2'
         || hostname.endsWith('.test')
         || hostname.endsWith('.local')
+        || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
     );
 }
 
