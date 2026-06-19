@@ -128,7 +128,7 @@
         <div id="app-splash" role="status" aria-label="Loading NUST Campus App">
             <img src="/images/nust-logo.png" class="splash-logo" alt="NUST Logo" />
 
-            <p class="splash-title">Campus Navigator</p>
+            <p class="splash-title">Campus App</p>
             <p class="splash-subtitle">Loading campus map&hellip;</p>
 
             <div class="splash-track">

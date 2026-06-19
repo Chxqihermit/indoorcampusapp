@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { dashboard } from "@/routes";
 import { Link } from "@inertiajs/react";
-import { BookOpen, Folder, LayoutGrid, MapPin } from "lucide-react";
+import { BookOpen, Folder, LayoutGrid, MapPin, Users } from "lucide-react";
 import AppLogo from "./app-logo";
 const mainNavItems = [
   {
@@ -24,6 +24,11 @@ const mainNavItems = [
     title: "Indoor Map",
     href: "/indoor-map",
     icon: MapPin
+  },
+  {
+    title: "Staff Directory",
+    href: "/staff-directory",
+    icon: Users
   }
 ];
 const footerNavItems = [

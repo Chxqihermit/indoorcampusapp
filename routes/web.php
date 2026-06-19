@@ -18,6 +18,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('indoor-map', function () {
         return Inertia::render('IndoorNavigation');
     })->name('indoor-map');
+
+    Route::get('staff-directory', function () {
+        return Inertia::render('staff-directory');
+    })->name('staff-directory');
 });
 
 require __DIR__.'/settings.php';
