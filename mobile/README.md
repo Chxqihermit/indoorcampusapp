@@ -1,6 +1,8 @@
 # CampusNav Mobile
 
-**Expo app** that loads the **full web campus experience** in a WebView — same MapLibre map, search, swipeable staff cards, and routing as the browser. **No duplicate React Native map.**
+**Expo app** that loads the **full web campus experience** in a WebView.
+
+**Stack:** Expo SDK 56 · React Native 0.85 · React 19.2
 
 ## Architecture
 

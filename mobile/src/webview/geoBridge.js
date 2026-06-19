@@ -52,22 +52,45 @@ async function readPosition(options = {}) {
 
   return Location.getCurrentPositionAsync({
     accuracy,
-    maximumAge: options.maximumAge ?? 0
+    mayShowUserSettingsDialog: true
   });
 }
 
 function createGeoBridge(webRef) {
   let watchSubscription = null;
+  let permissionGranted = false;
+  let pendingWatchStart = false;
 
   const stopWatch = () => {
     watchSubscription?.remove();
     watchSubscription = null;
   };
 
+  const pushInitialPosition = async () => {
+    try {
+      const pos = await readPosition({ enableHighAccuracy: true });
+      pushWatchUpdate(webRef, pos.coords);
+    } catch {
+      // watch may still deliver later
+    }
+  };
+
   const startWatch = async () => {
-    if (watchSubscription) return;
-    const granted = await ensurePermission();
-    if (!granted) return;
+    if (watchSubscription) {
+      await pushInitialPosition();
+      return;
+    }
+
+    if (!permissionGranted) {
+      permissionGranted = await ensurePermission();
+    }
+    if (!permissionGranted) {
+      pendingWatchStart = true;
+      return;
+    }
+
+    pendingWatchStart = false;
+    await pushInitialPosition();
 
     watchSubscription = await Location.watchPositionAsync(
       {
@@ -81,16 +104,28 @@ function createGeoBridge(webRef) {
 
   const handleGeoGet = async (id, options) => {
     try {
-      const granted = await ensurePermission();
-      if (!granted) {
-        deliverError(webRef, id, 1, "Permission denied. Allow location access for CampusNav in your device settings.");
+      if (!permissionGranted) {
+        permissionGranted = await ensurePermission();
+      }
+      if (!permissionGranted) {
+        deliverError(
+          webRef,
+          id,
+          1,
+          "Permission denied. Allow location for Expo Go (or CampusNav) in device Settings → Apps → Permissions → Location."
+        );
         return;
       }
 
       const pos = await readPosition(options);
       deliverCoords(webRef, id, pos.coords);
     } catch (error) {
-      deliverError(webRef, id, 2, error?.message || "Location unavailable.");
+      deliverError(
+        webRef,
+        id,
+        2,
+        error?.message || "Location unavailable. On the emulator, set a mock location in Extended controls → Location."
+      );
     }
   };
 
@@ -110,7 +145,13 @@ function createGeoBridge(webRef) {
     }
   };
 
-  const primePermissions = () => ensurePermission();
+  const primePermissions = async () => {
+    permissionGranted = await ensurePermission();
+    if (permissionGranted && pendingWatchStart) {
+      await startWatch();
+    }
+    return permissionGranted;
+  };
 
   const dispose = () => {
     stopWatch();

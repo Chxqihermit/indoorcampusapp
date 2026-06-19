@@ -4,12 +4,13 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { initializeCapacitor } from "./lib/capacitor";
-import { initializeExpoWebViewGeolocation } from "./lib/expoGeolocation";
+import { initializeExpoWebViewGeolocation, applyExpoGeolocationPatch } from "./lib/expoGeolocation";
 import { initializeTheme } from "./hooks/use-appearance";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 initializeCapacitor();
 initializeExpoWebViewGeolocation();
+window.addEventListener('campus-geo-retry', () => applyExpoGeolocationPatch());
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 createInertiaApp({
   title: (title) => title ? `${title} - ${appName}` : appName,

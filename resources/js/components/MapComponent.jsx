@@ -1147,8 +1147,8 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
                 type: "circle",
                 source: "user-location",
                 paint: {
-                  "circle-radius": 9,
-                  "circle-color": "#2A427D",
+                  "circle-radius": 10,
+                  "circle-color": "#3B82F6",
                   "circle-stroke-color": "#ffffff",
                   "circle-stroke-width": 3,
                   "circle-opacity": 1
@@ -1173,6 +1173,10 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
             });
             if (map.current.getLayer("user-location-dot")) {
               map.current.setLayoutProperty("user-location-dot", "visibility", "visible");
+              try {
+                map.current.moveLayer("user-location-dot");
+              } catch {
+              }
             }
           };
           const hideUserLocationDot = () => {
@@ -1565,6 +1569,7 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
             }
             navigator.geolocation.getCurrentPosition(
               (pos) => {
+                handleGpsUpdate(pos);
                 const lng = pos.coords.longitude;
                 const lat = pos.coords.latitude;
                 const accuracy = pos.coords.accuracy;
@@ -1578,7 +1583,7 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
                 switch (err.code) {
                   case err.PERMISSION_DENIED:
                     errorMsg = document.documentElement.classList.contains("expo-webview")
-                      ? "Permission denied. Allow location access for CampusNav in your device settings."
+                      ? "Permission denied. Allow location for Expo Go (or CampusNav) in Settings → Apps → Permissions → Location."
                       : "Permission denied. Please allow location access in your browser settings.";
                     break;
                   case err.POSITION_UNAVAILABLE:

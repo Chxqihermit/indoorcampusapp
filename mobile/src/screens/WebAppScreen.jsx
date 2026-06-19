@@ -13,6 +13,7 @@ import { BRAND_BLUE } from "@/constants/colors";
 import { createGeoBridge } from "@/webview/geoBridge";
 
 const WEBVIEW_BOOTSTRAP = `
+  window.__CAMPUS_NATIVE_GEO = true;
   document.documentElement.classList.add('expo-webview');
   true;
 `;
@@ -135,6 +136,12 @@ function WebAppScreen() {
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => {
             webRef.current?.injectJavaScript(WEBVIEW_READY_POLL);
+            webRef.current?.injectJavaScript(`
+              if (window.__expoGeoPatched !== true && window.ReactNativeWebView) {
+                window.dispatchEvent(new Event('campus-geo-retry'));
+              }
+              true;
+            `);
           }}
           onMessage={onWebMessage}
           onGeolocationPermissionsShowPrompt={onGeolocationPermissionsShowPrompt}

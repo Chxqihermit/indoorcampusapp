@@ -50,7 +50,7 @@
 | Layer | Technology |
 |-------|------------|
 | **Web UI** | React 19 + JSX, Inertia.js, MapLibre GL, Tailwind CSS |
-| **Mobile** | Expo 52 + `react-native-webview` → `/campus` (same React app) |
+| **Mobile** | Expo 56 + `react-native-webview` → `/campus` (RN 0.85, React 19.2) |
 | **Optional native shell** | Capacitor 8 (`android/`, `ios/`) |
 | **Backend** | Laravel 12, Fortify auth |
 | **Database** | MySQL (Laragon) — e.g. `nustcampusdatabase` |

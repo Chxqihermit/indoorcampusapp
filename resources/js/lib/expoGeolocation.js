@@ -5,6 +5,7 @@ const TIMEOUT = 3;
 function isExpoWebView() {
     return (
         document.documentElement.classList.contains('expo-webview')
+        || window.__CAMPUS_NATIVE_GEO === true
         || typeof window.ReactNativeWebView?.postMessage === 'function'
     );
 }
@@ -28,9 +29,12 @@ function coordsToPosition(coords) {
     };
 }
 
-export function initializeExpoWebViewGeolocation() {
-    if (!isExpoWebView() || window.__expoGeoPatched) {
-        return;
+function applyExpoGeolocationPatch() {
+    if (window.__expoGeoPatched) {
+        return true;
+    }
+    if (!isExpoWebView()) {
+        return false;
     }
 
     window.__expoGeoPatched = true;
@@ -115,6 +119,13 @@ export function initializeExpoWebViewGeolocation() {
         const watchId = Date.now() + Math.floor(Math.random() * 1000);
         watchCallbacks.set(watchId, success);
         ensureWatch();
+
+        navigator.geolocation.getCurrentPosition(
+            success,
+            error ?? (() => undefined),
+            options
+        );
+
         return watchId;
     };
 
@@ -122,4 +133,24 @@ export function initializeExpoWebViewGeolocation() {
         watchCallbacks.delete(watchId);
         maybeStopWatch();
     };
+
+    return true;
 }
+
+export function initializeExpoWebViewGeolocation() {
+    if (applyExpoGeolocationPatch()) {
+        return;
+    }
+
+    let tries = 0;
+    const retry = setInterval(() => {
+        if (applyExpoGeolocationPatch() || ++tries >= 50) {
+            clearInterval(retry);
+        }
+    }, 100);
+
+    document.addEventListener('DOMContentLoaded', () => applyExpoGeolocationPatch(), { once: true });
+    window.addEventListener('load', () => applyExpoGeolocationPatch(), { once: true });
+}
+
+export { applyExpoGeolocationPatch, isExpoWebView };
