@@ -1,7 +1,13 @@
 # CampusNav — Laravel (Inertia/React) + MySQL
-# Start:  docker compose up --build
-# App:    http://localhost:8000
-# DB:     localhost:3306 (user/pass/db: campusnav)
+#
+# Local:  docker compose up --build
+# Test:   copy .env.docker.example to .env.docker, set APP_URL, then:
+#         docker compose --env-file .env.docker up --build -d
+#
+# App:    http://localhost:8000  (or HTTP_PORT from .env.docker)
+# Note:   Frontend is built into the app image (no separate frontend container).
+
+name: campusnav
 
 services:
   app:
@@ -9,21 +15,21 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:80"
+      - "${HTTP_PORT:-8000}:80"
     environment:
-      APP_NAME: CampusNav
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8000
-      APP_KEY: base64:gc5Z/6Zh5ogTwgOcM9AU32o/fEXJ7JJ3tCZlpVMFuts=
+      APP_NAME: ${APP_NAME:-CampusNav}
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      APP_KEY: ${APP_KEY:-base64:gc5Z/6Zh5ogTwgOcM9AU32o/fEXJ7JJ3tCZlpVMFuts=}
       LOG_CHANNEL: stderr
-      LOG_LEVEL: debug
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
-      DB_DATABASE: campusnav
-      DB_USERNAME: campusnav
-      DB_PASSWORD: campusnav
+      DB_DATABASE: ${DOCKER_DB_DATABASE:-campusnav}
+      DB_USERNAME: ${DOCKER_DB_USERNAME:-campusnav}
+      DB_PASSWORD: ${DOCKER_DB_PASSWORD:-campusnav}
       SESSION_DRIVER: database
       CACHE_STORE: database
       QUEUE_CONNECTION: database
@@ -33,17 +39,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     restart: unless-stopped
 
   db:
     image: mysql:8.4
-    ports:
-      - "3306:3306"
     environment:
-      MYSQL_DATABASE: campusnav
-      MYSQL_USER: campusnav
-      MYSQL_PASSWORD: campusnav
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DOCKER_DB_DATABASE:-campusnav}
+      MYSQL_USER: ${DOCKER_DB_USERNAME:-campusnav}
+      MYSQL_PASSWORD: ${DOCKER_DB_PASSWORD:-campusnav}
+      MYSQL_ROOT_PASSWORD: ${DOCKER_MYSQL_ROOT_PASSWORD:-root}
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
@@ -51,7 +61,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 20s
+      start_period: 30s
     restart: unless-stopped
 
 volumes:

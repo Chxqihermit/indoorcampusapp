@@ -5,10 +5,10 @@
 .env
 .env.*
 !.env.example
+!.env.docker.example
 node_modules
 vendor
-mobile/node_modules
-mobile/.expo
+mobile
 android
 ios
 storage/logs/*
@@ -21,3 +21,6 @@ replay_pid*.log
 hs_err_pid*.log
 *.md
 !README.md
+!README.Docker.md
+# Staff PDF is source-only; runtime seeder uses database/seeders/data/fci-staff.json
+public/data/*.pdf

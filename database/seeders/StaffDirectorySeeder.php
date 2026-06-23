@@ -49,7 +49,7 @@ class StaffDirectorySeeder extends Seeder
 
         return match (true) {
             str_contains($building, 'it house') => 'L1',
-            str_contains($building, 'inceit'), str_contains($building, 'ceit') => 'K1',
+            str_contains($building, 'inceit'), str_contains($building, 'ceit') => 'L1',
             str_contains($building, 'poly') => 'A18',
             str_contains($building, 'science') => 'D4',
             str_contains($building, 'https') => 'E4',

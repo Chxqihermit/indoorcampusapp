@@ -28,8 +28,9 @@ until php -r "
   sleep 2
 done
 
-php artisan config:clear
+php artisan storage:link --force --no-interaction 2>/dev/null || true
+php artisan config:clear --no-interaction
 php artisan migrate --force --no-interaction
-php artisan db:seed --force --no-interaction || true
+php artisan db:seed --force --no-interaction
 
 exec apache2-foreground
