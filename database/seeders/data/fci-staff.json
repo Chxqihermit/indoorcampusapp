@@ -1,0 +1,776 @@
+[
+  {
+    "firstName": "Fungai",
+    "lastName": "Bhunu Shava",
+    "email": "fbshava@nust.na",
+    "staffPhone": "81 328 9988",
+    "staffPosition": "Acting Executive Dean",
+    "buildingName": "IT House",
+    "roomNo": "30"
+  },
+  {
+    "firstName": "Rauna",
+    "lastName": "Matheus",
+    "email": "rmatheus@nust.na",
+    "staffPhone": "85 640 4613",
+    "staffPosition": "Secretary to the Dean",
+    "buildingName": "IT House",
+    "roomNo": "2"
+  },
+  {
+    "firstName": "Ottilie",
+    "lastName": "Itana",
+    "email": "oitana@nust.na",
+    "staffPhone": "814106722",
+    "staffPosition": "Receptionist",
+    "buildingName": "IT House",
+    "roomNo": "3"
+  },
+  {
+    "firstName": "Julia",
+    "lastName": "Semi",
+    "email": "jsemi@nust.na",
+    "staffPhone": "81 242 9281",
+    "staffPosition": "Faculty Officer",
+    "buildingName": "IT House",
+    "roomNo": "7"
+  },
+  {
+    "firstName": "Dimbulukweni",
+    "lastName": "Nauyoma",
+    "email": "dnauyoma@nust.na",
+    "staffPhone": "857553977",
+    "staffPosition": "Assistant Faculty Officer",
+    "buildingName": "IT House",
+    "roomNo": "7"
+  },
+  {
+    "firstName": "Loini",
+    "lastName": "Iiyambo",
+    "email": "liiyambo@nust.na",
+    "staffPhone": "81 150 9678",
+    "staffPosition": "INCEIT Center Head",
+    "buildingName": "INCEIT",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Laina",
+    "lastName": "Ndeumane",
+    "email": "ceit.info@nust.na",
+    "staffPhone": "81 363 7589",
+    "staffPosition": "CEIT Reception",
+    "buildingName": "INCEIT",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Helsona",
+    "lastName": "Ickua",
+    "email": "hickua@nust.na",
+    "staffPhone": "816996342",
+    "staffPosition": "CEIT Lab Technitian",
+    "buildingName": "INCEIT",
+    "roomNo": "lab"
+  },
+  {
+    "firstName": "Wilbard",
+    "lastName": "Kamati",
+    "email": "wkamati@nust.na",
+    "staffPhone": "816870681",
+    "staffPosition": "Lecturer",
+    "buildingName": "INCEIT",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Guy",
+    "lastName": "Lusilao Zodi",
+    "email": "gzodi@nust.na",
+    "staffPhone": "81 367 7286",
+    "staffPosition": "Associate Dean:School of Computing",
+    "buildingName": "IT House",
+    "roomNo": "17"
+  },
+  {
+    "firstName": "Simon",
+    "lastName": "Munchinenyika",
+    "email": "smuchinenyika@nust.na",
+    "staffPhone": "81 367 3361",
+    "staffPosition": "Head of Department: Software Engineering",
+    "buildingName": "Poly Height",
+    "roomNo": "201"
+  },
+  {
+    "firstName": "Jose",
+    "lastName": "Quenum",
+    "email": "jquenum@nust.na",
+    "staffPhone": "81 663 5305",
+    "staffPosition": "Professor",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.82"
+  },
+  {
+    "firstName": "Heike",
+    "lastName": "Winschiers- Theophilus",
+    "email": "hwinschiers@nust.na",
+    "staffPhone": "81 319 8582",
+    "staffPosition": "Professor",
+    "buildingName": "HTTPS",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Azeta",
+    "lastName": "Ambrose",
+    "email": "aazeta@nust.na",
+    "staffPhone": "81 364 3798",
+    "staffPosition": "Professor",
+    "buildingName": "Office building",
+    "roomNo": "159"
+  },
+  {
+    "firstName": "Gereon",
+    "lastName": "Kapuire",
+    "email": "gkapuire@nust.na",
+    "staffPhone": "81 208 7221",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "HTTPS",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Shilumbe",
+    "lastName": "Chivuno-Kuria",
+    "email": "schivuno@nust.na",
+    "staffPhone": "81 271 8391",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "404"
+  },
+  {
+    "firstName": "Rosetha",
+    "lastName": "Kays",
+    "email": "rkays@nust.na",
+    "staffPhone": "81 302 3482",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "404"
+  },
+  {
+    "firstName": "Steven",
+    "lastName": "Tjiraso",
+    "email": "stjiraso@nust.na",
+    "staffPhone": "85 686 6610",
+    "staffPosition": "Lecturer",
+    "buildingName": "HTTPS",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Ndinelago",
+    "lastName": "Nashandi",
+    "email": "nnashandi@nust.na",
+    "staffPhone": "81 867 8032",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "23"
+  },
+  {
+    "firstName": "Herman",
+    "lastName": "Kandjimi",
+    "email": "hkandjimi@nust.na",
+    "staffPhone": "81 406 0167",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "202"
+  },
+  {
+    "firstName": "Naftal",
+    "lastName": "Indongo",
+    "email": "nindongo@nust.na",
+    "staffPhone": "816721865",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "18"
+  },
+  {
+    "firstName": "Josephine",
+    "lastName": "Muntuumo",
+    "email": "jmuntuumo@nust.na",
+    "staffPhone": "814063093",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "6"
+  },
+  {
+    "firstName": "Mike",
+    "lastName": "Kale",
+    "email": "mkale@nust.na",
+    "staffPhone": "812,113,456",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "5"
+  },
+  {
+    "firstName": "Tendai",
+    "lastName": "Mataranyika",
+    "email": "tmataranyika@nust.na",
+    "staffPhone": "816984070",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Mercy",
+    "lastName": "Chitauro",
+    "email": "mchitauro@nust.na",
+    "staffPhone": "81 725 4253",
+    "staffPosition": "Head of Department: Cybersecurity",
+    "buildingName": "IT House",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Attlee",
+    "lastName": "Gamundani",
+    "email": "agamundani@nust.na",
+    "staffPhone": "816466549",
+    "staffPosition": "Professor",
+    "buildingName": "",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Isaac",
+    "lastName": "Nhamu",
+    "email": "inhamu@nust.na",
+    "staffPhone": "81 373 9496",
+    "staffPosition": "Lecturer",
+    "buildingName": "HTTPS",
+    "roomNo": "23"
+  },
+  {
+    "firstName": "Shadreck",
+    "lastName": "Chitauro",
+    "email": "schitauro@nust.na",
+    "staffPhone": "81 385 1853",
+    "staffPosition": "Lecturer",
+    "buildingName": "Office Building",
+    "roomNo": "161"
+  },
+  {
+    "firstName": "Victoria",
+    "lastName": "Shakela",
+    "email": "vshakela@nust.na",
+    "staffPhone": "85 236 4662",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "47"
+  },
+  {
+    "firstName": "Julius",
+    "lastName": "Silaa",
+    "email": "jsilaa@nust.na",
+    "staffPhone": "81 299 1858",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Heights",
+    "roomNo": "401"
+  },
+  {
+    "firstName": "Jain",
+    "lastName": "Arpit",
+    "email": "ajain@nust.na",
+    "staffPhone": "81 218 5128",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Heights",
+    "roomNo": "403"
+  },
+  {
+    "firstName": "Mbasuva",
+    "lastName": "Uakomba",
+    "email": "umbasuva@nust.na",
+    "staffPhone": "814903631",
+    "staffPosition": "Junior Lecturer",
+    "buildingName": "",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Hillary",
+    "lastName": "Kwala",
+    "email": "hkwala@nust.na",
+    "staffPhone": "812159673",
+    "staffPosition": "Junior Lecturer",
+    "buildingName": "Poly Heights",
+    "roomNo": "405"
+  },
+  {
+    "firstName": "Edward",
+    "lastName": "Nepolo",
+    "email": "enepolo@nust.na",
+    "staffPhone": "81 329 0294",
+    "staffPosition": "Head of Department: Computer Science",
+    "buildingName": "IT House",
+    "roomNo": "17"
+  },
+  {
+    "firstName": "Dharm",
+    "lastName": "Singh Jat",
+    "email": "dsingh@nust.na",
+    "staffPhone": "81 035 3230",
+    "staffPosition": "Professor",
+    "buildingName": "Poly Height",
+    "roomNo": "201"
+  },
+  {
+    "firstName": "Simate",
+    "lastName": "Zilole",
+    "email": "zsimate@nust.na",
+    "staffPhone": "81813560",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Peter",
+    "lastName": "Gallert",
+    "email": "pgallert@nust.na",
+    "staffPhone": "85 600 9644",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "24"
+  },
+  {
+    "firstName": "Teresia",
+    "lastName": "Ankome",
+    "email": "tankome@nust.na",
+    "staffPhone": "81 286 2274",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "23"
+  },
+  {
+    "firstName": "Albertina",
+    "lastName": "Shilongo",
+    "email": "ashilongo@nust.na",
+    "staffPhone": "81 284 6151",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "18"
+  },
+  {
+    "firstName": "Jovita",
+    "lastName": "Mateus",
+    "email": "jmateus@nust.na",
+    "staffPhone": "81 849 7543",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "9"
+  },
+  {
+    "firstName": "Shoopala",
+    "lastName": "Nambahu",
+    "email": "snambahu@nust.na",
+    "staffPhone": "81 200 5337",
+    "staffPosition": "Lecturer",
+    "buildingName": "INCEIT",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Helena",
+    "lastName": "Hainana",
+    "email": "hhainana@nust.na",
+    "staffPhone": "818445390",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "21"
+  },
+  {
+    "firstName": "Nasimane",
+    "lastName": "Ekandjo",
+    "email": "nekandjo@nust.na",
+    "staffPhone": "81 229 4206",
+    "staffPosition": "Junior Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "24"
+  },
+  {
+    "firstName": "Suama",
+    "lastName": "L Hamunyela",
+    "email": "slhamunyela@nust.na",
+    "staffPhone": "81 461 8657",
+    "staffPosition": "Associate Dean: School of Informatics, Journalism and Media Technology",
+    "buildingName": "IT House",
+    "roomNo": "29"
+  },
+  {
+    "firstName": "Munyaradzi",
+    "lastName": "Maravanyika",
+    "email": "mmaravanyika@nust.na",
+    "staffPhone": "85 636 5330",
+    "staffPosition": "Head of Department: Informatics",
+    "buildingName": "IT House",
+    "roomNo": "15"
+  },
+  {
+    "firstName": "Jude",
+    "lastName": "Osakwe",
+    "email": "josakwe@nust.na",
+    "staffPhone": "81 360 8119",
+    "staffPosition": "Professor",
+    "buildingName": "Poly Height",
+    "roomNo": "405"
+  },
+  {
+    "firstName": "Samuel",
+    "lastName": "Akinsola",
+    "email": "sakinsola@nust.na",
+    "staffPhone": "81 458 8981",
+    "staffPosition": "Associate Professor",
+    "buildingName": "Poly Height",
+    "roomNo": "401"
+  },
+  {
+    "firstName": "Stephen",
+    "lastName": "Fashoto",
+    "email": "sfashoto@nust.na",
+    "staffPhone": "818694929",
+    "staffPosition": "Associate Professor",
+    "buildingName": "Polyheits",
+    "roomNo": "202"
+  },
+  {
+    "firstName": "Irja",
+    "lastName": "Shaanika",
+    "email": "ishaanika@nust.na",
+    "staffPhone": "81 206 2885",
+    "staffPosition": "Associate Professor",
+    "buildingName": "HTTPS",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Gabriel",
+    "lastName": "Nhinda",
+    "email": "gnhinda@nust.na",
+    "staffPhone": "81 277 2528",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "HTTPS",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Cleopas",
+    "lastName": "Kwenda",
+    "email": "ckwenda@nust.na",
+    "staffPhone": "816352863",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Poly Heights",
+    "roomNo": "401"
+  },
+  {
+    "firstName": "Richard",
+    "lastName": "Maliwatu",
+    "email": "rmaliwatu@nust.na",
+    "staffPhone": "81 304 3119",
+    "staffPosition": "Lecturer",
+    "buildingName": "",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Johnson",
+    "lastName": "Billawer",
+    "email": "jbillawer@nust.na",
+    "staffPhone": "81 382 6833",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "403"
+  },
+  {
+    "firstName": "Admire",
+    "lastName": "Kachepa",
+    "email": "akachepa@nust.na",
+    "staffPhone": "81 314 1362",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "201"
+  },
+  {
+    "firstName": "Sebastian",
+    "lastName": "Mukumbira",
+    "email": "smukumbira@nust.na",
+    "staffPhone": "81 279 0059",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "4"
+  },
+  {
+    "firstName": "Eliazer",
+    "lastName": "Mbaeva",
+    "email": "embaeva@nust.na",
+    "staffPhone": "81 749 9040",
+    "staffPosition": "Lecturer",
+    "buildingName": "INCEIT",
+    "roomNo": "K1"
+  },
+  {
+    "firstName": "Nkululeko",
+    "lastName": "Mthembo",
+    "email": "nmthembo@nust.na",
+    "staffPhone": "81 412 5995",
+    "staffPosition": "Lecturer",
+    "buildingName": "Poly Height",
+    "roomNo": "202"
+  },
+  {
+    "firstName": "Sinte",
+    "lastName": "Mutelo",
+    "email": "smutelo@nust.na",
+    "staffPhone": "81 374 8822",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "22"
+  },
+  {
+    "firstName": "Katazo",
+    "lastName": "N Amunkete",
+    "email": "namunkete@nust.na",
+    "staffPhone": "81 2128604",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "22"
+  },
+  {
+    "firstName": "Selma",
+    "lastName": "Phillemon",
+    "email": "sphillemon@nust.na",
+    "staffPhone": "812835169",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "51"
+  },
+  {
+    "firstName": "Lydia",
+    "lastName": "Endjala",
+    "email": "lendjala@nust.na",
+    "staffPhone": "2760",
+    "staffPosition": "Lecturer",
+    "buildingName": "IT House",
+    "roomNo": "51"
+  },
+  {
+    "firstName": "Phillip",
+    "lastName": "Santos",
+    "email": "hellis@nust.na",
+    "staffPhone": "81 779 4891",
+    "staffPosition": "Head of Department: Journalism and Media Technology",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.79"
+  },
+  {
+    "firstName": "Wanja",
+    "lastName": "Njuguna",
+    "email": "pwnjuguna@nust.na",
+    "staffPhone": "81 322 4981",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "?"
+  },
+  {
+    "firstName": "Ndlovu",
+    "lastName": "Khulekani",
+    "email": "kndlovu@nust.na",
+    "staffPhone": "812325359",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Hugh",
+    "lastName": "Ellis",
+    "email": "psantos@nust.na",
+    "staffPhone": "855546282",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.71"
+  },
+  {
+    "firstName": "Sadrag",
+    "lastName": "Shihomeka",
+    "email": "cshihomeka@nust.na",
+    "staffPhone": "812798401",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.81"
+  },
+  {
+    "firstName": "Frans",
+    "lastName": "Anthony",
+    "email": "afrans@nust.na",
+    "staffPhone": "812670887",
+    "staffPosition": "Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Francois",
+    "lastName": "Andreas",
+    "email": "fandreas@nust.na",
+    "staffPhone": "813484896",
+    "staffPosition": "Studio Technician",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.73"
+  },
+  {
+    "firstName": "Jordaania",
+    "lastName": "Andima",
+    "email": "jkandima@nust.na",
+    "staffPhone": "814040473",
+    "staffPosition": "HOD: Digital Arts and Animation",
+    "buildingName": "Science & Tech",
+    "roomNo": "2.72"
+  },
+  {
+    "firstName": "Mellisa",
+    "lastName": "Allela",
+    "email": "mallela@nust.na",
+    "staffPhone": "817688627",
+    "staffPosition": "Senior Lecturer",
+    "buildingName": "Science & Tech",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Klaudia",
+    "lastName": "Iyambo",
+    "email": "kiyambo@nust.na",
+    "staffPhone": "812177666",
+    "staffPosition": "Technician",
+    "buildingName": "Science & Tech",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Ronald",
+    "lastName": "Karon",
+    "email": "rkaron@nust.na",
+    "staffPhone": "81 374 8473",
+    "staffPosition": "Section Head: CUS and ICT",
+    "buildingName": "Office b/d floor 1",
+    "roomNo": "151"
+  },
+  {
+    "firstName": "Andreas",
+    "lastName": "Kalimbo",
+    "email": "akalimbo@nust.na",
+    "staffPhone": "81 494 1034",
+    "staffPosition": "Coordinator: CUS and ICT",
+    "buildingName": "Library",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Pedulu",
+    "lastName": "Hauwanga",
+    "email": "phauwanga@nust.na",
+    "staffPhone": "813410346",
+    "staffPosition": "HR Business Partner",
+    "buildingName": "Admin b/d floor",
+    "roomNo": "2"
+  },
+  {
+    "firstName": "Iris",
+    "lastName": "Kamberipa",
+    "email": "ikamberipa@nust.na",
+    "staffPhone": "2116",
+    "staffPosition": "Human Capital Business Partner",
+    "buildingName": "Admin b/d floor",
+    "roomNo": "2"
+  },
+  {
+    "firstName": "Agas",
+    "lastName": "Shihepo",
+    "email": "ashihepo@nust.na",
+    "staffPhone": "2823",
+    "staffPosition": "Technician",
+    "buildingName": "Office building Tech",
+    "roomNo": "office1"
+  },
+  {
+    "firstName": "Ephath",
+    "lastName": "Shimhanda",
+    "email": "eshimhanda@nust.na",
+    "staffPhone": "815627695",
+    "staffPosition": "Technician",
+    "buildingName": "office building Tech",
+    "roomNo": "office2"
+  },
+  {
+    "firstName": "Josefina",
+    "lastName": "Olavi",
+    "email": "jolavi@nust.na",
+    "staffPhone": "814990997",
+    "staffPosition": "Technician",
+    "buildingName": "office building Tech",
+    "roomNo": "office2"
+  },
+  {
+    "firstName": "Mario",
+    "lastName": "Tripodi",
+    "email": "mtripodi@nust.na",
+    "staffPhone": "81 244 3472",
+    "staffPosition": "Senior Lab Technician",
+    "buildingName": "Office building Tech",
+    "roomNo": "office1"
+  },
+  {
+    "firstName": "Alina",
+    "lastName": "Nakaande",
+    "email": "anakaande@nust.na",
+    "staffPhone": "2627",
+    "staffPosition": "Librarian",
+    "buildingName": "Library",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Aletta",
+    "lastName": "Limon",
+    "email": "alimon@nust.na",
+    "staffPhone": "2067",
+    "staffPosition": "Examinations Officer",
+    "buildingName": "IT House",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Kapelwa",
+    "lastName": "Khumalo",
+    "email": "kkapelwa@nust.na",
+    "staffPhone": "2652",
+    "staffPosition": "Industry liason officer",
+    "buildingName": "Polyheights",
+    "roomNo": "5th floor"
+  },
+  {
+    "firstName": "Zodid",
+    "lastName": "Gaseb",
+    "email": "ggaseb@nust.na",
+    "staffPhone": "2812",
+    "staffPosition": "International relations officer",
+    "buildingName": "n/a",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Nicotimas",
+    "lastName": "Gabriel",
+    "email": "ngabriel@nust.na",
+    "staffPhone": "2744",
+    "staffPosition": "Technical Assistant Carpentry",
+    "buildingName": "Lecture building",
+    "roomNo": "basement"
+  },
+  {
+    "firstName": "Shanice",
+    "lastName": "Clay",
+    "email": "sclay@nust.na",
+    "staffPhone": "2041",
+    "staffPosition": "Procurement Officer",
+    "buildingName": "Finance",
+    "roomNo": "n/a"
+  },
+  {
+    "firstName": "Frank",
+    "lastName": "Puriza",
+    "email": "fpuriza@nust.na",
+    "staffPhone": "2973",
+    "staffPosition": "Acting Director",
+    "buildingName": "DAWASCO building",
+    "roomNo": "n/a"
+  }
+]

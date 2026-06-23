@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Floor extends Model
 {
     protected $fillable = [
-        'building_id',
+        'buildingID',
         'level',
         'image_path',
         'pdf_path',
@@ -17,9 +17,14 @@ class Floor extends Model
         'height',
     ];
 
+    public function campusBuilding(): BelongsTo
+    {
+        return $this->belongsTo(CampusBuilding::class, 'buildingID', 'buildingID');
+    }
+
     public function building(): BelongsTo
     {
-        return $this->belongsTo(Building::class);
+        return $this->campusBuilding();
     }
 
     public function locations(): HasMany

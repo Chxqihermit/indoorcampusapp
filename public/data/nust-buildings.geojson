@@ -107,7 +107,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "elh-001", "name": "Elisabeth House", "type": "building" },
+      "properties": { "id": "A1", "name": "Elisabeth House", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.077242300831244, -22.56575067711502]
@@ -123,7 +123,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "adm-001", "name": "Admin block", "type": "building" },
+      "properties": { "id": "A3", "name": "Admin block", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.077066684397494, -22.56639936038279]
@@ -131,23 +131,16 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "san-001", "name": "Sander House", "type": "building" },
+      "properties": { "id": "A2", "name": "Sander House", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.07730734395406, -22.566050993822586]
       }
     },
+
     {
       "type": "Feature",
-      "properties": { "id": "mah-001", "name": "Male Hostel", "type": "building" },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [17.07628616691599, -22.56491579323061]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "id": "shm-001", "name": "Shangri-La Men's Hostel", "type": "building" },
+      "properties": { "id": "A9", "name": "Shangri-La Men's Hostel", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.0762926712286, -22.5654563661072]
@@ -179,7 +172,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "ngc-001", "name": "Namibia-German Centre for logistics", "type": "building" },
+      "properties": { "id": "J6", "name": "Namibia-German Centre for logistics", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075089373445763, -22.56650747396405]
@@ -187,7 +180,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "nbi-001", "name": "NBII", "type": "building" },
+      "properties": { "id": "J5", "name": "NBII", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.074725131954665, -22.566417379319617]
@@ -211,7 +204,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "nei-001", "name": "Namibia Energy Institute", "type": "building" },
+      "properties": { "id": "J4", "name": "Namibia Energy Institute", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075063356195415, -22.565858791204917]
@@ -219,7 +212,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "gate-001", "name": "Main gate", "type": "gate" },
+      "properties": { "id": "A19", "name": "Main gate", "type": "gate" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.077691098381393, -22.566537505500605]
@@ -355,7 +348,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "daw-001", "name": "Dawakos House", "type": "building" },
+      "properties": { "id": "A13", "name": "Dawakos House", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.077380603962837, -22.56479697651129]
@@ -363,7 +356,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "mlh-001", "name": "Mon-Resa Ladie's Hostel", "type": "building" },
+      "properties": { "id": "A7", "name": "Monresa Ladies Hostel", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.076724496168055, -22.56635612367708]
@@ -395,7 +388,7 @@
     },
     {
       "type": "Feature",
-      "properties": { "id": "ceu-001", "name": "(K7) Cooperative Education Unit", "type": "building" },
+      "properties": { "id": "K1", "name": "Cooperative Education Unit", "type": "building" },
       "geometry": {
         "type": "Point",
         "coordinates": [17.075567524566452, -22.5667370957991]

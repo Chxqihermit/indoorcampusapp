@@ -25,10 +25,11 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([
-            BuildingSeeder::class,
+            CampusBuildingSeeder::class,
             LibrarySeeder::class,
             IndoorLocationsSeeder::class,
             FirstFloorLocationsSeeder::class,
+            StaffDirectorySeeder::class,
         ]);
     }
 }

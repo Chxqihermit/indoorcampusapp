@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('floors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('building_id')->constrained('buildings')->onDelete('cascade');
+            $table->string('buildingID', 50)->nullable();
             $table->integer('level');
             $table->string('image_path')->nullable();
             $table->string('pdf_path')->nullable();

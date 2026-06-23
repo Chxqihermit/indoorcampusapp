@@ -1,0 +1,60 @@
+# CampusNav — Laravel (Inertia/React) + MySQL
+# Start:  docker compose up --build
+# App:    http://localhost:8000
+# DB:     localhost:3306 (user/pass/db: campusnav)
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: CampusNav
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      APP_KEY: base64:gc5Z/6Zh5ogTwgOcM9AU32o/fEXJ7JJ3tCZlpVMFuts=
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: debug
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: campusnav
+      DB_USERNAME: campusnav
+      DB_PASSWORD: campusnav
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+    volumes:
+      - app-storage:/var/www/html/storage
+      - app-bootstrap-cache:/var/www/html/bootstrap/cache
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: campusnav
+      MYSQL_USER: campusnav
+      MYSQL_PASSWORD: campusnav
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  app-storage:
+  app-bootstrap-cache:

@@ -11,6 +11,10 @@ class StaffDirectory extends Model
 
     protected $primaryKey = 'StaffID';
 
+    public $incrementing = true;
+
+    protected $keyType = 'int';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -18,6 +22,8 @@ class StaffDirectory extends Model
         'lastName',
         'staffPosition',
         'email',
+        'staffPhone',
+        'Department',
         'buildingID',
         'roomNo',
     ];

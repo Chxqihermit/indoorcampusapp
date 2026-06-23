@@ -11,7 +11,7 @@
 require 'bootstrap/app.php';
 $app = require_once 'bootstrap/providers.php';
 
-use App\Models\Building;
+use App\Models\CampusBuilding;
 use App\Models\Floor;
 use App\Models\User;
 
@@ -26,14 +26,12 @@ try {
 
 // Create or update NUST Library building
 echo "Creating NUST Library building...\n";
-$library = Building::firstOrCreate(
-    ['name' => 'NUST Library'],
-    [
-        'latitude' => 33.651486,  // Coordinates for NUST Islamabad
-        'longitude' => 73.200867,
-    ]
-);
-echo "✅ NUST Library building created/updated (ID: {$library->id})\n\n";
+$library = CampusBuilding::query()->where('buildingID', 'D1')->first();
+if (! $library) {
+    echo "❌ Library building (D1) not found. Run CampusBuildingSeeder first.\n";
+    exit(1);
+}
+echo "✅ Using campus building: {$library->buildingName} (ID: {$library->buildingID})\n\n";
 
 // Create floors for NUST Library
 $floors = [
@@ -49,7 +47,7 @@ foreach ($floors as $level => $floorData) {
     
     $floor = Floor::firstOrCreate(
         [
-            'building_id' => $library->id,
+            'buildingID' => $library->buildingID,
             'level' => $level,
         ],
         [

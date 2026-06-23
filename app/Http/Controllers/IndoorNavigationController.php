@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Building;
+use App\Models\CampusBuilding;
 use App\Models\Floor;
 use App\Models\Location;
 use App\Models\Path;
@@ -15,7 +15,14 @@ class IndoorNavigationController extends Controller
      */
     public function getAllBuildings()
     {
-        $buildings = Building::all();
+        $buildings = CampusBuilding::query()
+            ->orderBy('buildingName')
+            ->get()
+            ->map(fn (CampusBuilding $building) => [
+                'id' => $building->buildingID,
+                'name' => $building->buildingName,
+            ]);
+
         return response()->json($buildings);
     }
 
@@ -24,7 +31,7 @@ class IndoorNavigationController extends Controller
      */
     public function getFloors($buildingId)
     {
-        $floors = Floor::where('building_id', $buildingId)
+        $floors = Floor::where('buildingID', $buildingId)
             ->orderBy('level')
             ->get();
         
@@ -82,10 +89,15 @@ class IndoorNavigationController extends Controller
             $results = $request->input('results');
             $isBatchRequest = isset($results) && is_array($results);
 
-            // Determine building (assume Library building)
-            $building = Building::where('name', 'Library')->first();
-            if (!$building) {
-                $building = Building::create(['name' => 'Library']);
+            $library = CampusBuilding::query()
+                ->where('buildingID', 'D1')
+                ->first();
+
+            if (! $library) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Library building (D1) not found in campusbuilding.',
+                ], 422);
             }
 
             // Map floor names to levels
@@ -107,7 +119,7 @@ class IndoorNavigationController extends Controller
                     // Get or create floor
                     $floor = Floor::firstOrCreate(
                         [
-                            'building_id' => $building->id,
+                            'buildingID' => $library->buildingID,
                             'level' => $floorLevel,
                         ],
                         ['name' => $floorName]
@@ -136,7 +148,7 @@ class IndoorNavigationController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => "Seeded database with extracted locations",
-                    'building_id' => $building->id,
+                    'buildingID' => $library->buildingID,
                     'created_count' => $totalCreated,
                 ]);
             } else {
@@ -152,7 +164,7 @@ class IndoorNavigationController extends Controller
                 // Get or create floor
                 $floor = Floor::firstOrCreate(
                     [
-                        'building_id' => $building->id,
+                        'buildingID' => $library->buildingID,
                         'level' => $floorLevel,
                     ],
                     ['name' => $request->floor]
@@ -275,8 +287,8 @@ class IndoorNavigationController extends Controller
         }
 
         // Get all nodes and paths needed for routing
-        $buildingIds = collect([$startLocation->floor->building_id, $endLocation->floor->building_id])->unique();
-        $floors = Floor::whereIn('building_id', $buildingIds)->with(['locations', 'building'])->get();
+        $buildingIds = collect([$startLocation->floor->buildingID, $endLocation->floor->buildingID])->unique();
+        $floors = Floor::whereIn('buildingID', $buildingIds)->with(['locations', 'campusBuilding'])->get();
 
         $allNodes = [];
         $allPaths = [];
@@ -311,8 +323,8 @@ class IndoorNavigationController extends Controller
             'floors' => $floors->map(fn($f) => [
                 'id' => $f->id,
                 'level' => $f->level,
-                'building_id' => $f->building_id,
-                'building_name' => $f->building->name,
+                'buildingID' => $f->buildingID,
+                'building_name' => $f->campusBuilding?->buildingName,
             ])->toArray(),
         ]);
     }
@@ -323,14 +335,14 @@ class IndoorNavigationController extends Controller
     public function searchLocations(Request $request)
     {
         $query = $request->query('q', '');
-        $buildingId = $request->query('building_id');
+        $buildingId = $request->query('buildingID', $request->query('building_id'));
 
         $locations = Location::query()
-            ->with(['floor.building'])
+            ->with(['floor.campusBuilding'])
             ->where('name', 'like', "%{$query}%");
 
         if ($buildingId) {
-            $locations = $locations->whereHas('floor', fn($q) => $q->where('building_id', $buildingId));
+            $locations = $locations->whereHas('floor', fn ($q) => $q->where('buildingID', $buildingId));
         }
 
         $results = $locations->limit(20)->get()->map(fn($loc) => [
@@ -339,8 +351,8 @@ class IndoorNavigationController extends Controller
             'type' => $loc->type,
             'floor_id' => $loc->floor_id,
             'floor_level' => $loc->floor->level,
-            'building_name' => $loc->floor->building->name,
-            'display_name' => "{$loc->name} - {$loc->floor->building->name} Floor {$loc->floor->level}",
+            'building_name' => $loc->floor->campusBuilding?->buildingName,
+            'display_name' => "{$loc->name} - {$loc->floor->campusBuilding?->buildingName} Floor {$loc->floor->level}",
         ]);
 
         return response()->json($results);

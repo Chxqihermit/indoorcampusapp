@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Building;
+use App\Models\CampusBuilding;
 use App\Models\Floor;
 use App\Models\Location;
 use App\Models\Path;
@@ -15,14 +15,15 @@ class IndoorLocationsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get or create the Library building
-        $library = Building::firstOrCreate(
-            ['name' => 'Library Offices'],
-            [
-                'latitude' => 33.6414,
-                'longitude' => 73.0786,
-            ]
-        );
+        $library = CampusBuilding::query()
+            ->where('buildingID', 'D1')
+            ->first();
+
+        if (! $library) {
+            throw new \RuntimeException(
+                'Library building (D1) not found in campusbuilding. Run CampusBuildingSeeder first.'
+            );
+        }
 
         // Create floors for the library
         $floorData = [
@@ -36,7 +37,7 @@ class IndoorLocationsSeeder extends Seeder
         foreach ($floorData as $data) {
             $floors[$data['level']] = Floor::firstOrCreate(
                 [
-                    'building_id' => $library->id,
+                    'buildingID' => $library->buildingID,
                     'level' => $data['level'],
                 ],
                 [
