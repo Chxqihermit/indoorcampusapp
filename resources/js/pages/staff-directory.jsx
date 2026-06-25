@@ -1,4 +1,4 @@
-import AppLayout from "@/layouts/app-layout";
+import CampusPageLayout from "@/layouts/campus-page-layout";
 import { Head } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 
@@ -161,11 +161,8 @@ function StaffDirectory() {
     }
   }
 
-  const breadcrumbs = [{ title: "Staff Directory", href: "/staff-directory" }];
-
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Staff Directory" />
+    <CampusPageLayout title="Staff Directory">
 
       <div className="flex flex-col min-h-screen bg-gray-50">
         {/* Page header */}
@@ -269,7 +266,7 @@ function StaffDirectory() {
           {toast}
         </div>
       )}
-    </AppLayout>
+    </CampusPageLayout>
   );
 }
 

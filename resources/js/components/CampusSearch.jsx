@@ -22,6 +22,8 @@ import {
   QUICK_CATEGORIES,
   SEARCH_SCOPE_OPTIONS
 } from "@/utils/campusSearch";
+import { getBuildingByFloorId } from "@/services/buildings";
+import { getEntranceForBuilding } from "@/services/buildingEntrances";
 function ResultIcon({ type }) {
   const cls = "w-5 h-5 text-gray-500 shrink-0";
   switch (type) {
@@ -115,10 +117,24 @@ function CampusSearch({
     const map = mapRef.current;
     if (!map) return;
     if (result.type === "indoor") {
-      const indoorPath = window.location.pathname.startsWith("/campus")
-        ? "/campus/indoor"
-        : "/indoor-map";
-      window.location.href = `${indoorPath}?location=${result.indoorId}`;
+      const building = getBuildingByFloorId(result.floorId);
+      const entrance = building ? getEntranceForBuilding(building.id) : undefined;
+
+      if (entrance && map) {
+        map.setEnd(entrance.outdoor.lng, entrance.outdoor.lat, entrance.name);
+        map.setIndoorContinuation?.({
+          buildingId: building.id,
+          floorId: result.floorId,
+          locationId: result.indoorId,
+          locationName: result.name,
+          entrance,
+        });
+      } else {
+        const indoorPath = window.location.pathname.startsWith("/campus")
+          ? "/campus/indoor"
+          : "/indoor-map";
+        window.location.href = `${indoorPath}?location=${result.indoorId}`;
+      }
       return;
     }
     if (!result.coordinates) return;

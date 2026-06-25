@@ -31,7 +31,7 @@ function MapHeader({
                 {
     /* GPS Button */
   }
-                <button
+                {onGpsClick ? <button
     onClick={onGpsClick}
     className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
     title="Use current GPS location (Press *)"
@@ -39,7 +39,7 @@ function MapHeader({
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11 10.07 7.5 12 7.5s3.5 1.57 3.5 3.5z" />
                     </svg>
-                </button>
+                </button> : <div className="w-10" />}
             </div>
         </header>;
 }

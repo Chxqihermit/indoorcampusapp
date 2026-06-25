@@ -63,6 +63,7 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
   );
   const [hoverCoords, setHoverCoords] = useState(null);
   const [staffCard, setStaffCard] = useState(null);
+  const [indoorContinuation, setIndoorContinuation] = useState(null);
   const [mobileSheet, setMobileSheet] = useState(false);
   const mobileSheetRef = useRef(false);
   const setStaffCardRef = useRef(setStaffCard);
@@ -1969,6 +1970,7 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
     },
     clearRoute: () => {
       walkApiRef.current?.clearWalk();
+      setIndoorContinuation(null);
     },
     goToMainCampus: () => {
       if (!map.current) return;
@@ -2006,7 +2008,9 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
     },
     swapPoints: () => {
       walkApiRef.current?.swapPoints();
-    }
+    },
+    setIndoorContinuation: (data) => setIndoorContinuation(data),
+    clearIndoorContinuation: () => setIndoorContinuation(null),
   }));
   return <div className="relative w-full h-full" style={{ minHeight: "500px" }}>
             <div
@@ -2032,6 +2036,22 @@ const MapComponent = forwardRef(({ onRouteStateChange, onStaffCardChange }, ref)
       gpsBtnRef.current?.click();
     }}
   />}
+            {indoorContinuation && (
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 max-w-sm w-[calc(100%-2rem)]">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-500 dark:text-gray-400">Indoor destination</p>
+        <p className="font-medium text-gray-900 dark:text-white truncate">{indoorContinuation.locationName}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{indoorContinuation.entrance.name}</p>
+      </div>
+      <a
+        href={`/indoor-map?building=${indoorContinuation.buildingId}&startFloor=${indoorContinuation.entrance.indoor.floorId}&startVertex=${indoorContinuation.entrance.indoor.vertexId}&endName=${encodeURIComponent(indoorContinuation.locationName)}`}
+        className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition"
+      >
+        Open Indoor Map
+      </a>
+      <button onClick={() => setIndoorContinuation(null)} className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">✕</button>
+    </div>
+  )}
         </div>;
 });
 MapComponent.displayName = "MapComponent";

@@ -26,7 +26,7 @@ export const groundFloorGraphData: GraphData = {
     { id: 14, name: 'Stairs to 1st Floor',   type: 'exit',     cx: 761.557,  cy: 472.195, floor_id: 2 },
 
     // ── Walkway nodes ─────────────────────────────────────────────
-    { id: 15, name: 'v1',  type: 'walkway', cx: 572.59,  cy: 670.26,  floor_id: 2 },
+    { id: 15, name: 'Library Entrance', type: 'entrance', cx: 572.59,  cy: 670.26,  floor_id: 2 },
     { id: 16, name: 'v2',  type: 'walkway', cx: 572.59,  cy: 530.11,  floor_id: 2 },
     { id: 17, name: 'v3',  type: 'walkway', cx: 538.10,  cy: 531.92,  floor_id: 2 },
     { id: 18, name: 'v4',  type: 'walkway', cx: 538.10,  cy: 578.76,  floor_id: 2 },

@@ -132,7 +132,7 @@ export default function SimpleFloorPlanViewer({
                 <div className="relative w-full bg-gray-100 border-2 border-gray-300 rounded-lg overflow-hidden" style={{ height: '700px' }}>
                     <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: '100%', height: '100%' }}>
                         <svg
-                            style={{ width: '100%', height: 'auto', display: 'block', userSelect: 'none' }}
+                            style={{ width: '100%', height: '100%', display: 'block', userSelect: 'none' }}
                             viewBox={`0 0 ${svgW} ${svgH}`}
                             preserveAspectRatio="xMidYMid meet"
                         >

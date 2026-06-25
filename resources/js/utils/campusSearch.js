@@ -1,4 +1,6 @@
 import { knownLocations } from '@/components/knownLocations';
+import { BUILDINGS } from '@/services/buildings';
+import { getFloorGraphData } from '@/services/graphData';
 
 const RECENT_KEY = 'campusnav-recent-searches';
 const MAX_RECENTS = 8;
@@ -141,14 +143,44 @@ function mergeResults(...groups) {
     return merged;
 }
 
+export function searchIndoorLocationsFromGraph(query) {
+    const q = query.trim().toLowerCase();
+    if (!q || q.length < 1) return [];
+
+    const results = [];
+    for (const building of BUILDINGS) {
+        for (const floor of building.floors) {
+            try {
+                const graphData = getFloorGraphData(floor.floorId);
+                const matches = graphData.vertices
+                    .filter(v => v.type !== 'walkway' && v.type !== 'exit')
+                    .filter(v => v.name.toLowerCase().includes(q));
+                for (const v of matches) {
+                    results.push({
+                        id: `graph-indoor-${floor.floorId}-${v.id}`,
+                        name: v.name,
+                        subtitle: `${building.name} · ${floor.name}`,
+                        type: 'indoor',
+                        indoorId: v.id,
+                        floorId: floor.floorId,
+                        buildingId: building.id,
+                    });
+                }
+            } catch { continue; }
+        }
+    }
+    return results;
+}
+
 export async function searchBuildings(query) {
     const campus = searchCampusLocations(query);
-    const [dbBuildings, indoor] = await Promise.all([
+    const graphIndoor = searchIndoorLocationsFromGraph(query);
+    const [dbBuildings, dbIndoor] = await Promise.all([
         searchCampusBuildingsFromDb(query),
         searchIndoorLocations(query),
     ]);
 
-    return mergeResults(dbBuildings, campus, indoor).slice(0, 12);
+    return mergeResults(dbBuildings, campus, dbIndoor, graphIndoor).slice(0, 12);
 }
 
 export async function searchAll(query, scope = 'all') {
@@ -161,13 +193,14 @@ export async function searchAll(query, scope = 'all') {
     }
 
     const campus = searchCampusLocations(query);
-    const [indoor, staff, dbBuildings] = await Promise.all([
+    const graphIndoor = searchIndoorLocationsFromGraph(query);
+    const [dbIndoor, staff, dbBuildings] = await Promise.all([
         searchIndoorLocations(query),
         searchStaff(query),
         searchCampusBuildingsFromDb(query),
     ]);
 
-    return mergeResults(staff, dbBuildings, campus, indoor).slice(0, 12);
+    return mergeResults(staff, dbBuildings, campus, dbIndoor, graphIndoor).slice(0, 12);
 }
 
 export const SEARCH_SCOPE_OPTIONS = [

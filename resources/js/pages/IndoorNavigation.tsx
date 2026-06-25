@@ -7,23 +7,15 @@
  * - Real-time location filtering
  */
 
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import CampusPageLayout from '@/layouts/campus-page-layout';
 import { Head } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import SimpleFloorPlanViewer from '@/components/SimpleFloorPlanViewer';
 import { getFloorGraphData, findPathOnGraph } from '../services/graphData';
 import { getTransitions } from '../services/floorTransitions';
 import { BUILDINGS } from '../services/buildings';
 
 
-// Breadcrumb navigation
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Indoor Map',
-        href: '/indoor-map',
-    },
-];
 
 
 interface Location {
@@ -126,6 +118,54 @@ export default function IndoorNavigationPage() {
     const [userPosition, setUserPosition] = useState<{ x: number; y: number; accuracy: number } | null>(null);
     const [pickingStart, setPickingStart] = useState(false);
 
+    // Handoff from outdoor navigation — read URL params once on mount
+    const handoffRef = useRef<{ startFloor: number; startVertex: number; endName: string } | null>(null);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const buildingParam = params.get('building');
+        const startFloor = parseInt(params.get('startFloor') ?? '', 10);
+        const startVertex = parseInt(params.get('startVertex') ?? '', 10);
+        const endName = params.get('endName');
+        if (!startFloor || !startVertex || !endName) return;
+
+        handoffRef.current = { startFloor, startVertex, endName: decodeURIComponent(endName) };
+
+        if (buildingParam && buildingParam !== selectedBuildingId) {
+            handleBuildingChange(buildingParam);
+            return;
+        }
+        const floorIndex = selectedBuilding.floors.findIndex(f => f.floorId === startFloor);
+        if (floorIndex !== -1) setSelectedFloorIndex(floorIndex);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Once graphData for the start floor is ready, apply handoff
+    useEffect(() => {
+        const p = handoffRef.current;
+        if (!graphData || !p || graphData.floorId !== p.startFloor) return;
+
+        const startV = graphData.vertices.find(v => v.id === p.startVertex);
+        if (!startV) return;
+
+        // Search all floors of this building for the destination by name
+        let endV: (typeof graphData.vertices)[0] | undefined;
+        for (const floor of selectedBuilding.floors) {
+            try {
+                const g = getFloorGraphData(floor.floorId);
+                const found = g.vertices.find(v => v.name.toLowerCase() === p.endName.toLowerCase());
+                if (found) { endV = found; break; }
+            } catch { continue; }
+        }
+        if (!endV) return;
+
+        const startLoc: Location = { id: startV.id, name: startV.name, type: startV.type, x_coordinate: startV.cx, y_coordinate: startV.cy, floorId: startV.floor_id };
+        const endLoc: Location = { id: endV.id, name: endV.name, type: endV.type, x_coordinate: endV.cx, y_coordinate: endV.cy, floorId: endV.floor_id };
+
+        setStartLocation(startLoc);
+        setEndLocation(endLoc);
+        runRoute(startLoc, endLoc);
+        handoffRef.current = null;
+    }, [graphData]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const filteredLocations = useMemo(() => {
         if (!searchQuery.trim()) return [];
@@ -324,8 +364,7 @@ export default function IndoorNavigationPage() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Indoor Navigation" />
+        <CampusPageLayout title="Indoor Map">
             <div className="flex h-full flex-1 flex-col gap-4 overflow-visible rounded-xl p-4">
                 {/* Main Container - Vertical Layout */}
                 <div className="flex flex-col gap-4">
@@ -630,7 +669,7 @@ export default function IndoorNavigationPage() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </CampusPageLayout>
     );
 }
 
